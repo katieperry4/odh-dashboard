@@ -559,6 +559,61 @@ export const useNotebookProgress = (
     }
   }
 
+  // If 'pod-assigned' was successful, mark 'pod-created' step as complete
+  if (
+    progressSteps.find((p) => p.step === ProgressionStep.POD_ASSIGNED)?.status ===
+    EventStatus.SUCCESS
+  ) {
+    const podCreatedStep = progressSteps.find((p) => p.step === ProgressionStep.POD_CREATED);
+    if (podCreatedStep) {
+      podCreatedStep.status = EventStatus.SUCCESS;
+    }
+  }
+
+  // If the notebook container is running, mark prior steps complete
+  if (
+    progressSteps.find((p) => p.step === ProgressionStep.NOTEBOOK_CONTAINER_STARTED)?.status ===
+    EventStatus.SUCCESS
+  ) {
+    for (const progressStep of progressSteps) {
+      if (
+        !progressStep.step?.includes('OAUTH') &&
+        progressStep.status !== EventStatus.SUCCESS &&
+        progressStep.step !== ProgressionStep.SERVER_STARTED
+      ) {
+        progressStep.status = EventStatus.SUCCESS;
+      }
+    }
+  }
+
+  // If the oauth container is running, mark prior steps complete
+  if (
+    progressSteps.find((p) => p.step === ProgressionStep.OAUTH_CONTAINER_STARTED)?.status ===
+    EventStatus.SUCCESS
+  ) {
+    for (const progressStep of progressSteps) {
+      if (
+        progressStep.step?.includes('OAUTH') &&
+        progressStep.status !== EventStatus.SUCCESS &&
+        progressStep.step !== ProgressionStep.SERVER_STARTED
+      ) {
+        progressStep.status = EventStatus.SUCCESS;
+      }
+    }
+  }
+
+  // If the server is started, then all prior steps must have succeeded, mark them complete
+  if (
+    progressSteps.find((p) => p.step === ProgressionStep.SERVER_STARTED)?.status ===
+    EventStatus.SUCCESS
+  ) {
+    for (const progressStep of progressSteps) {
+      if (progressStep.status !== EventStatus.SUCCESS) {
+        progressStep.status = EventStatus.SUCCESS;
+      }
+    }
+  }
+
   // Insert the last error or warning after the last pending step
   if (currentProgress.length) {
     const lastProgression = currentProgress[currentProgress.length - 1];
