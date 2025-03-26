@@ -560,65 +560,17 @@ export const useNotebookProgress = (
     }
   }
 
-  // If 'Pod assigned' was successful, mark 'Pod created' step as complete
-  if (
-    progressSteps.find((p) => p.step === ProgressionStep.POD_ASSIGNED)?.status ===
-    EventStatus.SUCCESS
-  ) {
-    for (const progressStep of progressSteps) {
-      if (
-        progressStep.step &&
-        AssociatedSteps.PodStartedSteps.includes(progressStep.step) &&
-        progressStep.status !== EventStatus.SUCCESS
-      ) {
-        progressStep.status = EventStatus.SUCCESS;
-      }
+  // If milestone steps are completed, mark off associated steps
+  Object.entries(AssociatedSteps).forEach(([key, values]) => {
+    if (progressSteps.find((p) => p.step === key)?.status === EventStatus.SUCCESS) {
+      values.forEach((value) => {
+        const currentStep = progressSteps.find((p) => p.step === value);
+        if (currentStep && currentStep.status !== EventStatus.SUCCESS) {
+          currentStep.status = EventStatus.SUCCESS;
+        }
+      });
     }
-  }
-
-  // If the notebook container is running, mark prior steps complete
-  if (
-    progressSteps.find((p) => p.step === ProgressionStep.NOTEBOOK_CONTAINER_STARTED)?.status ===
-    EventStatus.SUCCESS
-  ) {
-    for (const progressStep of progressSteps) {
-      if (
-        progressStep.step &&
-        AssociatedSteps.NotebookStartedSteps.includes(progressStep.step) &&
-        progressStep.status !== EventStatus.SUCCESS
-      ) {
-        progressStep.status = EventStatus.SUCCESS;
-      }
-    }
-  }
-
-  // If the oauth container is running, mark prior steps complete
-  if (
-    progressSteps.find((p) => p.step === ProgressionStep.OAUTH_CONTAINER_STARTED)?.status ===
-    EventStatus.SUCCESS
-  ) {
-    for (const progressStep of progressSteps) {
-      if (
-        progressStep.step &&
-        AssociatedSteps.OauthStartedSteps.includes(progressStep.step) &&
-        progressStep.status !== EventStatus.SUCCESS
-      ) {
-        progressStep.status = EventStatus.SUCCESS;
-      }
-    }
-  }
-
-  // If the server is started, then all prior steps must have succeeded, mark them complete
-  if (
-    progressSteps.find((p) => p.step === ProgressionStep.SERVER_STARTED)?.status ===
-    EventStatus.SUCCESS
-  ) {
-    for (const progressStep of progressSteps) {
-      if (progressStep.status !== EventStatus.SUCCESS) {
-        progressStep.status = EventStatus.SUCCESS;
-      }
-    }
-  }
+  });
 
   // Insert the last error or warning after the last pending step
   if (currentProgress.length) {

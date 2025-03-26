@@ -636,7 +636,7 @@ export const ProgressionStepTitles = {
 };
 
 export const AssociatedSteps = {
-  NotebookStartedSteps: [
+  [ProgressionStep.NOTEBOOK_CONTAINER_STARTED]: [
     ProgressionStep.SERVER_REQUESTED,
     ProgressionStep.POD_CREATED,
     ProgressionStep.POD_ASSIGNED,
@@ -645,15 +645,15 @@ export const AssociatedSteps = {
     ProgressionStep.PULLING_NOTEBOOK_IMAGE,
     ProgressionStep.NOTEBOOK_IMAGE_PULLED,
     ProgressionStep.NOTEBOOK_CONTAINER_CREATED,
-    ProgressionStep.NOTEBOOK_CONTAINER_STARTED,
   ],
-  OauthStartedSteps: [
+  [ProgressionStep.OAUTH_CONTAINER_STARTED]: [
     ProgressionStep.PULLING_OAUTH,
     ProgressionStep.OAUTH_PULLED,
     ProgressionStep.OAUTH_CONTAINER_CREATED,
     ProgressionStep.OAUTH_CONTAINER_STARTED,
   ],
-  PodStartedSteps: [ProgressionStep.POD_CREATED, ProgressionStep.POD_ASSIGNED],
+  [ProgressionStep.POD_ASSIGNED]: [ProgressionStep.POD_CREATED],
+  [ProgressionStep.SERVER_STARTED]: [ProgressionStep],
 };
 
 export type NotebookProgressStep = {
