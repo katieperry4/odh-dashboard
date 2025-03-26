@@ -3,6 +3,7 @@ import { AxiosError } from 'axios';
 import { K8sResourceCommon } from '@openshift/dynamic-plugin-sdk-utils';
 import { createRoleBinding, getRoleBinding } from '~/services/roleBindingService';
 import {
+  AssociatedSteps,
   EnvVarReducedTypeKeyValues,
   EventStatus,
   Notebook,
@@ -564,9 +565,14 @@ export const useNotebookProgress = (
     progressSteps.find((p) => p.step === ProgressionStep.POD_ASSIGNED)?.status ===
     EventStatus.SUCCESS
   ) {
-    const podCreatedStep = progressSteps.find((p) => p.step === ProgressionStep.POD_CREATED);
-    if (podCreatedStep) {
-      podCreatedStep.status = EventStatus.SUCCESS;
+    for (const progressStep of progressSteps) {
+      if (
+        progressStep.step &&
+        AssociatedSteps.PodStartedSteps.includes(progressStep.step) &&
+        progressStep.status !== EventStatus.SUCCESS
+      ) {
+        progressStep.status = EventStatus.SUCCESS;
+      }
     }
   }
 
@@ -577,9 +583,9 @@ export const useNotebookProgress = (
   ) {
     for (const progressStep of progressSteps) {
       if (
-        !progressStep.step?.includes('OAUTH') &&
-        progressStep.status !== EventStatus.SUCCESS &&
-        progressStep.step !== ProgressionStep.SERVER_STARTED
+        progressStep.step &&
+        AssociatedSteps.NotebookStartedSteps.includes(progressStep.step) &&
+        progressStep.status !== EventStatus.SUCCESS
       ) {
         progressStep.status = EventStatus.SUCCESS;
       }
@@ -593,9 +599,9 @@ export const useNotebookProgress = (
   ) {
     for (const progressStep of progressSteps) {
       if (
-        progressStep.step?.includes('OAUTH') &&
-        progressStep.status !== EventStatus.SUCCESS &&
-        progressStep.step !== ProgressionStep.SERVER_STARTED
+        progressStep.step &&
+        AssociatedSteps.OauthStartedSteps.includes(progressStep.step) &&
+        progressStep.status !== EventStatus.SUCCESS
       ) {
         progressStep.status = EventStatus.SUCCESS;
       }
