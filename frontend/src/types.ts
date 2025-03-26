@@ -645,13 +645,15 @@ export const AssociatedSteps = {
     ProgressionStep.PULLING_NOTEBOOK_IMAGE,
     ProgressionStep.NOTEBOOK_IMAGE_PULLED,
     ProgressionStep.NOTEBOOK_CONTAINER_CREATED,
+    ProgressionStep.NOTEBOOK_CONTAINER_STARTED,
   ],
   OauthStartedSteps: [
     ProgressionStep.PULLING_OAUTH,
     ProgressionStep.OAUTH_PULLED,
     ProgressionStep.OAUTH_CONTAINER_CREATED,
+    ProgressionStep.OAUTH_CONTAINER_STARTED,
   ],
-  PodStartedSteps: [ProgressionStep.POD_CREATED],
+  PodStartedSteps: [ProgressionStep.POD_CREATED, ProgressionStep.POD_ASSIGNED],
 };
 
 export type NotebookProgressStep = {
