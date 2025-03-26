@@ -560,7 +560,7 @@ export const useNotebookProgress = (
     }
   }
 
-  // If 'pod-assigned' was successful, mark 'pod-created' step as complete
+  // If 'Pod assigned' was successful, mark 'Pod created' step as complete
   if (
     progressSteps.find((p) => p.step === ProgressionStep.POD_ASSIGNED)?.status ===
     EventStatus.SUCCESS
