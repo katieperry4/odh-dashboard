@@ -134,7 +134,7 @@ rules:
       - rbac.authorization.k8s.io
     verbs:
       - list
-      - get
+      - watch
     resources:
       - rolebindings
       - clusterrolebindings
