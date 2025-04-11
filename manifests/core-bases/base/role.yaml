@@ -35,6 +35,8 @@ rules:
     verbs:
       - get
       - update
+      - list
+      - watch
     resources:
       - cronjobs
   - apiGroups:
@@ -52,6 +54,8 @@ rules:
       - build.openshift.io
     verbs:
       - list
+      - get
+      - watch
     resources:
       - builds
       - buildconfigs

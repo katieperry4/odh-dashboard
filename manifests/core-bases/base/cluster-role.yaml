@@ -134,12 +134,6 @@ rules:
       - rbac.authorization.k8s.io
     verbs:
       - list
-      - watch
-      - get
-      - create
-      - update
-      - patch
-      - delete
     resources:
       - rolebindings
       - clusterrolebindings
