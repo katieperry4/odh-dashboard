@@ -137,6 +137,7 @@ rules:
     resources:
       - rolebindings
       - clusterrolebindings
+      - roles
   - apiGroups:
       - ''
       - events.k8s.io
