@@ -135,6 +135,7 @@ rules:
     verbs:
       - list
       - watch
+      - get
     resources:
       - rolebindings
       - clusterrolebindings
