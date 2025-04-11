@@ -136,6 +136,10 @@ rules:
       - list
       - watch
       - get
+      - create
+      - update
+      - patch
+      - delete
     resources:
       - rolebindings
       - clusterrolebindings
