@@ -36,7 +36,6 @@ rules:
       - get
       - update
       - delete
-      - watch
     resources:
       - cronjobs
   - apiGroups:
