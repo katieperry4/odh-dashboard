@@ -136,6 +136,8 @@ rules:
       - list
       - get
       - create
+      - delete
+      - patch
     resources:
       - rolebindings
       - clusterrolebindings
