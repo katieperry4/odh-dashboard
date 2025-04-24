@@ -35,7 +35,7 @@ rules:
     verbs:
       - get
       - update
-      - list
+      - delete
       - watch
     resources:
       - cronjobs
@@ -55,7 +55,6 @@ rules:
     verbs:
       - list
       - get
-      - watch
     resources:
       - builds
       - buildconfigs
