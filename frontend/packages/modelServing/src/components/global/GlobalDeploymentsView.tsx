@@ -8,17 +8,25 @@ import GlobalDeploymentsTable from './GlobalDeploymentsTable';
 import ModelServingProjectSelection from './ModelServingProjectSelection';
 import { ModelDeploymentsContext } from '../../concepts/ModelDeploymentsContext';
 
-const GlobalDeploymentsView: React.FC = () => {
+type GlobalDeploymentsViewProps = {
+  empty?: boolean;
+  emptyStatePage?: React.ReactNode;
+};
+
+const GlobalDeploymentsView: React.FC<GlobalDeploymentsViewProps> = ({ empty, emptyStatePage }) => {
   const { deployments, loaded: deploymentsLoaded } = React.useContext(ModelDeploymentsContext);
   const { preferredProject: currentProject } = React.useContext(ProjectsContext);
   const hasDeployments = deployments && deployments.length > 0;
   const isLoading = !deploymentsLoaded;
+  const isEmpty = empty || (!isLoading && !hasDeployments);
 
   return (
     <ApplicationsPage
       loaded={!isLoading}
-      empty={!hasDeployments}
-      emptyStatePage={<GlobalNoModelsView project={currentProject ?? undefined} />}
+      empty={isEmpty}
+      emptyStatePage={
+        emptyStatePage ?? <GlobalNoModelsView project={currentProject ?? undefined} />
+      }
       description="Manage and view the health and performance of your deployed models."
       title={
         <TitleWithIcon title="Model deployments" objectType={ProjectObjectType.deployedModels} />
