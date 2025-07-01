@@ -15,6 +15,7 @@ import { byName, ProjectsContext } from '#~/concepts/projects/ProjectsContext';
 import { isProjectNIMSupported } from '#~/pages/modelServing/screens/projects/nimUtils';
 import ManageNIMServingModal from '#~/pages/modelServing/screens/projects/NIMServiceModal/ManageNIMServingModal';
 import useServingPlatformStatuses from '#~/pages/modelServing/useServingPlatformStatuses';
+import { ProjectDetailsContext } from '#~/pages/projects/ProjectDetailsContext';
 
 const ServeModelButton: React.FC = () => {
   const [platformSelected, setPlatformSelected] = React.useState<
@@ -29,6 +30,7 @@ const ServeModelButton: React.FC = () => {
     connections: { data: connections },
   } = React.useContext(ModelServingContext);
   const { projects } = React.useContext(ProjectsContext);
+  const { pvcs } = React.useContext(ProjectDetailsContext);
   const { namespace } = useParams<{ namespace: string }>();
   const servingPlatformStatuses = useServingPlatformStatuses();
   const isNIMAvailable = servingPlatformStatuses.kServeNIM.enabled;
@@ -103,6 +105,7 @@ const ServeModelButton: React.FC = () => {
             projectContext={{
               currentProject: project,
               connections,
+              pvcs: pvcs.data,
             }}
             servingRuntimeTemplates={templatesEnabled.filter((template) =>
               getTemplateEnabledForPlatform(template, ServingRuntimePlatform.SINGLE),

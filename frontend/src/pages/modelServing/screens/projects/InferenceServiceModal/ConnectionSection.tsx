@@ -1,8 +1,11 @@
 import React from 'react';
 import {
   Alert,
+  Flex,
+  FlexItem,
   FormGroup,
   FormSection,
+  Label,
   Popover,
   Radio,
   Skeleton,
@@ -15,7 +18,10 @@ import {
   ConnectionTypeConfigMapObj,
   ConnectionTypeValueType,
 } from '#~/concepts/connectionTypes/types';
-import { getResourceNameFromK8sResource } from '#~/concepts/k8s/utils';
+import {
+  getDisplayNameFromK8sResource,
+  getResourceNameFromK8sResource,
+} from '#~/concepts/k8s/utils';
 import {
   getConnectionTypeRef,
   isModelServingCompatible,
@@ -40,6 +46,9 @@ import { isModelPathValid } from '#~/pages/modelServing/screens/projects/utils';
 import DashboardPopupIconButton from '#~/concepts/dashboard/DashboardPopupIconButton';
 import { AccessTypes } from '#~/pages/projects/dataConnections/const';
 import { SupportedArea, useIsAreaAvailable } from '#~/concepts/areas/index.ts';
+import { PersistentVolumeClaimKind } from '#~/k8sTypes.ts';
+import TypeaheadSelect, { TypeaheadSelectOption } from '#~/components/TypeaheadSelect';
+import { getModelServingPVCAccessMode, getModelServingPVCAnnotations } from '#~/pages/modelServing/utils';
 import ConnectionS3FolderPathField from './ConnectionS3FolderPathField';
 import ConnectionOciPathField from './ConnectionOciPathField';
 import { ConnectionOciAlert } from './ConnectionOciAlert';
@@ -120,6 +129,61 @@ const ExistingModelConnectionField: React.FC<ExistingConnectionFieldProps> = ({
           />
         )}
     </>
+  );
+};
+
+type PvcConnectionFieldProps = {
+  data: CreatingInferenceServiceObject;
+  setData: UpdateObjectAtPropAndValue<CreatingInferenceServiceObject>;
+  pvcs?: PersistentVolumeClaimKind[];
+};
+const PvcConnectionField: React.FC<PvcConnectionFieldProps> = ({ data, setData, pvcs }) => {
+  const options: TypeaheadSelectOption[] = React.useMemo(
+    () =>
+      pvcs?.map((pvc) => {
+        const displayName = getDisplayNameFromK8sResource(pvc);
+        const { modelPath, modelName } = getModelServingPVCAnnotations(pvc);
+        const isModelServingPVC = !!modelPath && !!modelName;
+        const accessMode = getModelServingPVCAccessMode(pvc);
+        return {
+          content: displayName,
+          value: pvc.metadata.name,
+          description: isModelServingPVC ? (
+            <Flex>
+              <FlexItem>
+                <Label isCompact color="blue">
+                  Model Serving
+                </Label>
+              </FlexItem>
+              <FlexItem>
+                <Label isCompact color="green">
+                  {accessMode}
+                </Label>
+              </FlexItem>
+              <FlexItem>
+                <Label isCompact color="red">
+                  {modelName}
+                </Label>
+              </FlexItem>
+            </Flex>
+          ) : (
+            <Label isCompact color="green">
+              {accessMode}
+            </Label>
+          ),
+        };
+      }) || [],
+    [pvcs],
+  );
+
+  return (
+    <FormGroup label="PVC">
+      <TypeaheadSelect
+        placeholder="Select a PVC connection"
+        selectOptions={options}
+        dataTestId="pvc-connection-selector"
+      />
+    </FormGroup>
   );
 };
 
@@ -244,6 +308,7 @@ type Props = {
   loaded?: boolean;
   loadError?: Error | undefined;
   connections?: LabeledConnection[];
+  pvcs?: PersistentVolumeClaimKind[] | [];
   connectionTypeFilter?: (ct: ConnectionTypeConfigMapObj) => boolean;
 };
 
@@ -260,6 +325,7 @@ export const ConnectionSection: React.FC<Props> = ({
   loaded,
   loadError,
   connections,
+  pvcs,
   connectionTypeFilter = () => true,
 }) => {
   const [modelServingConnectionTypes] = useWatchConnectionTypes(true);
@@ -300,7 +366,23 @@ export const ConnectionSection: React.FC<Props> = ({
   return (
     <>
       {pvcServingEnabled && (
-        <Radio label="PVC Serving" name="pvc-serving-radio" id="pvc-serving-radio" />
+        <Radio
+          label="PVC connection"
+          name="pvc-serving-radio"
+          id="pvc-serving-radio"
+          isChecked={data.storage.type === InferenceServiceStorageType.PVC_STORAGE}
+          onChange={() => {
+            setConnection(undefined);
+            setData('storage', {
+              ...data.storage,
+              type: InferenceServiceStorageType.PVC_STORAGE,
+            });
+          }}
+          body={
+            data.storage.type === InferenceServiceStorageType.PVC_STORAGE &&
+            connections && <PvcConnectionField data={data} setData={setData} pvcs={pvcs} />
+          }
+        />
       )}
       {existingUriOption && !hasImagePullSecret && (
         <Radio

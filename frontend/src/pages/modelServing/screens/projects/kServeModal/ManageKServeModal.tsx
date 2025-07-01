@@ -23,6 +23,7 @@ import {
   InferenceServiceKind,
   AccessReviewResourceAttributes,
   SecretKind,
+  PersistentVolumeClaimKind,
 } from '#~/k8sTypes';
 import {
   getKServeContainerArgs,
@@ -89,6 +90,7 @@ type ManageKServeModalProps = {
     projectContext?: {
       currentProject: ProjectKind;
       connections: Connection[];
+      pvcs: PersistentVolumeClaimKind[] | [];
     };
   },
   {
@@ -473,6 +475,7 @@ const ManageKServeModal: React.FC<ManageKServeModalProps> = ({
                 setConnection={setConnection}
                 setIsConnectionValid={setIsConnectionValid}
                 connections={connections}
+                pvcs={projectContext?.pvcs}
               />
             </FormSection>
           )}
