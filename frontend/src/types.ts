@@ -789,3 +789,9 @@ export enum IconSize {
   XL = 'xl',
   XXL = 'xxl',
 }
+
+export enum PVCAccessMode {
+  READ_WRITE_MANY = 'ReadWriteMany',
+  READ_ONLY_MANY = 'ReadOnlyMany',
+  READ_WRITE_ONCE = 'ReadWriteOnce',
+}

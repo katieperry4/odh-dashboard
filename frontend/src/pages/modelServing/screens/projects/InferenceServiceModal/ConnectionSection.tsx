@@ -1,11 +1,8 @@
 import React from 'react';
 import {
   Alert,
-  Flex,
-  FlexItem,
   FormGroup,
   FormSection,
-  Label,
   Popover,
   Radio,
   Skeleton,
@@ -18,10 +15,7 @@ import {
   ConnectionTypeConfigMapObj,
   ConnectionTypeValueType,
 } from '#~/concepts/connectionTypes/types';
-import {
-  getDisplayNameFromK8sResource,
-  getResourceNameFromK8sResource,
-} from '#~/concepts/k8s/utils';
+import { getResourceNameFromK8sResource } from '#~/concepts/k8s/utils';
 import {
   getConnectionTypeRef,
   isModelServingCompatible,
@@ -47,11 +41,10 @@ import DashboardPopupIconButton from '#~/concepts/dashboard/DashboardPopupIconBu
 import { AccessTypes } from '#~/pages/projects/dataConnections/const';
 import { SupportedArea, useIsAreaAvailable } from '#~/concepts/areas/index.ts';
 import { PersistentVolumeClaimKind } from '#~/k8sTypes.ts';
-import TypeaheadSelect, { TypeaheadSelectOption } from '#~/components/TypeaheadSelect';
-import { getModelServingPVCAccessMode, getModelServingPVCAnnotations } from '#~/pages/modelServing/utils';
 import ConnectionS3FolderPathField from './ConnectionS3FolderPathField';
 import ConnectionOciPathField from './ConnectionOciPathField';
 import { ConnectionOciAlert } from './ConnectionOciAlert';
+import { PvcSelect } from './PVCSelect';
 
 type ExistingConnectionFieldProps = {
   connectionTypes: ConnectionTypeConfigMapObj[];
@@ -90,7 +83,6 @@ const ExistingModelConnectionField: React.FC<ExistingConnectionFieldProps> = ({
       !!selectedConnection && isModelPathValid(selectedConnection, folderPath, modelUri),
     );
   }, [folderPath, modelUri, selectedConnection, setIsConnectionValid]);
-
   return (
     <>
       <ExistingConnectionField
@@ -129,61 +121,6 @@ const ExistingModelConnectionField: React.FC<ExistingConnectionFieldProps> = ({
           />
         )}
     </>
-  );
-};
-
-type PvcConnectionFieldProps = {
-  data: CreatingInferenceServiceObject;
-  setData: UpdateObjectAtPropAndValue<CreatingInferenceServiceObject>;
-  pvcs?: PersistentVolumeClaimKind[];
-};
-const PvcConnectionField: React.FC<PvcConnectionFieldProps> = ({ data, setData, pvcs }) => {
-  const options: TypeaheadSelectOption[] = React.useMemo(
-    () =>
-      pvcs?.map((pvc) => {
-        const displayName = getDisplayNameFromK8sResource(pvc);
-        const { modelPath, modelName } = getModelServingPVCAnnotations(pvc);
-        const isModelServingPVC = !!modelPath && !!modelName;
-        const accessMode = getModelServingPVCAccessMode(pvc);
-        return {
-          content: displayName,
-          value: pvc.metadata.name,
-          description: isModelServingPVC ? (
-            <Flex>
-              <FlexItem>
-                <Label isCompact color="blue">
-                  Model Serving
-                </Label>
-              </FlexItem>
-              <FlexItem>
-                <Label isCompact color="green">
-                  {accessMode}
-                </Label>
-              </FlexItem>
-              <FlexItem>
-                <Label isCompact color="red">
-                  {modelName}
-                </Label>
-              </FlexItem>
-            </Flex>
-          ) : (
-            <Label isCompact color="green">
-              {accessMode}
-            </Label>
-          ),
-        };
-      }) || [],
-    [pvcs],
-  );
-
-  return (
-    <FormGroup label="PVC">
-      <TypeaheadSelect
-        placeholder="Select a PVC connection"
-        selectOptions={options}
-        dataTestId="pvc-connection-selector"
-      />
-    </FormGroup>
   );
 };
 
@@ -345,6 +282,11 @@ export const ConnectionSection: React.FC<Props> = ({
     [connections, data.storage.dataConnection],
   );
 
+  const selectedPVC = React.useMemo(
+    () => pvcs?.find((pvc) => pvc.metadata.name === data.storage.dataConnection),
+    [pvcs, data.storage.dataConnection],
+  );
+
   React.useEffect(() => {
     if (selectedConnection && !connection) {
       setConnection(selectedConnection.connection);
@@ -367,7 +309,7 @@ export const ConnectionSection: React.FC<Props> = ({
     <>
       {pvcServingEnabled && (
         <Radio
-          label="PVC connection"
+          label="Existing cluster storage"
           name="pvc-serving-radio"
           id="pvc-serving-radio"
           isChecked={data.storage.type === InferenceServiceStorageType.PVC_STORAGE}
@@ -376,11 +318,27 @@ export const ConnectionSection: React.FC<Props> = ({
             setData('storage', {
               ...data.storage,
               type: InferenceServiceStorageType.PVC_STORAGE,
+              uri: undefined,
+              alert: undefined,
             });
           }}
           body={
             data.storage.type === InferenceServiceStorageType.PVC_STORAGE &&
-            connections && <PvcConnectionField data={data} setData={setData} pvcs={pvcs} />
+            pvcs && (
+              <PvcSelect
+                pvcs={pvcs}
+                setModelUri={(uri) => setData('storage', { ...data.storage, uri })}
+                modelUri={data.storage.uri}
+                selectedPVC={selectedPVC}
+                onSelect={(selection) => {
+                  setData('storage', {
+                    ...data.storage,
+                    dataConnection: getResourceNameFromK8sResource(selection),
+                  });
+                }}
+                setIsConnectionValid={setIsConnectionValid}
+              />
+            )
           }
         />
       )}
