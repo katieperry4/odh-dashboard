@@ -31,12 +31,14 @@ import {
   getKServeContainerEnvVarStrs,
   requestsUnderLimits,
   resourcesArePositive,
+  isModelMesh,
 } from '#~/pages/modelServing/utils';
 import useCustomServingRuntimesEnabled from '#~/pages/modelServing/customServingRuntimes/useCustomServingRuntimesEnabled';
 import { getServingRuntimeFromName } from '#~/pages/modelServing/customServingRuntimes/utils';
 import DashboardModalFooter from '#~/concepts/dashboard/DashboardModalFooter';
 import {
   InferenceServiceStorageType,
+  ServingPlatformStatuses,
   ServingRuntimeEditInfo,
 } from '#~/pages/modelServing/screens/types';
 import ServingRuntimeSizeSection from '#~/pages/modelServing/screens/projects/ServingRuntimeModal/ServingRuntimeSizeSection';
@@ -69,6 +71,7 @@ import { SERVING_RUNTIME_SCOPE } from '#~/pages/modelServing/screens/const';
 import { useModelDeploymentNotification } from '#~/pages/modelServing/screens/projects/useModelDeploymentNotification';
 import { getDashboardPvcs } from '#~/api/k8s/pvcs';
 import useServingPlatformStatuses from '#~/pages/modelServing/useServingPlatformStatuses';
+import { ServingRuntimePlatform } from '#~/types.ts';
 import KServeAutoscalerReplicaSection from './KServeAutoscalerReplicaSection';
 import EnvironmentVariablesSection from './EnvironmentVariablesSection';
 import ServingRuntimeArgsSection from './ServingRuntimeArgsSection';
@@ -116,6 +119,23 @@ const ManageKServeModal: React.FC<ManageKServeModalProps> = ({
   shouldFormHidden: hideForm,
   existingUriOption,
 }) => {
+  const getPlatform = (
+    platformStatuses: ServingPlatformStatuses,
+    currentProject?: ProjectKind,
+    editingInfo?: {
+      inferenceServiceEditInfo?: InferenceServiceKind;
+    },
+  ) => {
+    if (currentProject) {
+      return getProjectModelServingPlatform(currentProject, platformStatuses).platform;
+    }
+    if (editingInfo?.inferenceServiceEditInfo) {
+      return isModelMesh(editingInfo.inferenceServiceEditInfo)
+        ? ServingRuntimePlatform.MULTI
+        : ServingRuntimePlatform.SINGLE;
+    }
+    return undefined;
+  };
   const { isRawAvailable, isServerlessAvailable } = useKServeDeploymentMode();
 
   const [createDataServingRuntime, setCreateDataServingRuntime] = useCreateServingRuntimeObject(
@@ -141,25 +161,32 @@ const ManageKServeModal: React.FC<ManageKServeModalProps> = ({
   const isAuthAvailable =
     useIsAreaAvailable(SupportedArea.K_SERVE_AUTH).status ||
     createDataInferenceService.isKServeRawDeployment;
+
   const currentProjectName = projectContext?.currentProject.metadata.name;
   const namespace = currentProjectName || createDataInferenceService.project;
   const currentProject = projectContext?.currentProject;
   const platformStatuses = useServingPlatformStatuses();
-  const { platform } = currentProject
-    ? getProjectModelServingPlatform(currentProject, platformStatuses)
-    : { platform: undefined };
+  const platform = getPlatform(platformStatuses, currentProject, editInfo);
 
   const projectTemplates = useTemplates(namespace);
   const [fallbackPvcs, setFallbackPvcs] = React.useState<PersistentVolumeClaimKind[]>([]);
+
   React.useEffect(() => {
+    let isCurrent = true;
     getDashboardPvcs(namespace)
       .then((data) => {
-        //setFallbackPvcs(data.filter((pvc) => pvc.metadata.namespace === namespace));
-        setFallbackPvcs(data);
+        if (isCurrent) {
+          setFallbackPvcs(data);
+        }
       })
       .catch(() => {
-        setFallbackPvcs([]);
+        if (isCurrent) {
+          setFallbackPvcs([]);
+        }
       });
+    return () => {
+      isCurrent = false;
+    };
   }, [namespace]);
 
   const customServingRuntimesEnabled = useCustomServingRuntimesEnabled();
