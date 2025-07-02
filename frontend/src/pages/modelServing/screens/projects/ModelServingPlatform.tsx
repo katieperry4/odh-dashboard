@@ -210,7 +210,8 @@ const ModelServingPlatform: React.FC = () => {
 
     return (
       <ManageKServeModal
-        projectContext={{ currentProject, connections, pvcs }}
+        projectContext={{ currentProject, connections }}
+        pvcs={pvcs}
         servingRuntimeTemplates={templatesEnabled.filter((template) =>
           getTemplateEnabledForPlatform(template, ServingRuntimePlatform.SINGLE),
         )}

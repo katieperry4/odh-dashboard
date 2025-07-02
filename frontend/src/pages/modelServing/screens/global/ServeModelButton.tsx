@@ -105,8 +105,8 @@ const ServeModelButton: React.FC = () => {
             projectContext={{
               currentProject: project,
               connections,
-              pvcs: pvcs.data,
             }}
+            pvcs={pvcs.data}
             servingRuntimeTemplates={templatesEnabled.filter((template) =>
               getTemplateEnabledForPlatform(template, ServingRuntimePlatform.SINGLE),
             )}

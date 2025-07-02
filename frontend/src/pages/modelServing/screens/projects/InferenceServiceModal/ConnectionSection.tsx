@@ -245,7 +245,7 @@ type Props = {
   loaded?: boolean;
   loadError?: Error | undefined;
   connections?: LabeledConnection[];
-  pvcs?: PersistentVolumeClaimKind[] | [];
+  pvcs?: PersistentVolumeClaimKind[];
   connectionTypeFilter?: (ct: ConnectionTypeConfigMapObj) => boolean;
 };
 
@@ -271,7 +271,6 @@ export const ConnectionSection: React.FC<Props> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [modelServingConnectionTypes],
   );
-
   const hasImagePullSecret = React.useMemo(() => !!data.imagePullSecrets, [data.imagePullSecrets]);
   const pvcServingEnabled = useIsAreaAvailable(SupportedArea.PVCSERVING).status;
   const selectedConnection = React.useMemo(
@@ -323,8 +322,7 @@ export const ConnectionSection: React.FC<Props> = ({
             });
           }}
           body={
-            data.storage.type === InferenceServiceStorageType.PVC_STORAGE &&
-            pvcs && (
+            data.storage.type === InferenceServiceStorageType.PVC_STORAGE && (
               <PvcSelect
                 pvcs={pvcs}
                 setModelUri={(uri) => setData('storage', { ...data.storage, uri })}

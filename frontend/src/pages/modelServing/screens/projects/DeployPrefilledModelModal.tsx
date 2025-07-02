@@ -180,8 +180,8 @@ const DeployPrefilledModelModalContents: React.FC<
         projectContext={{
           currentProject: selectedProject,
           connections,
-          pvcs: pvcs.data,
         }}
+        pvcs={pvcs.data}
         projectSection={projectSection}
         existingUriOption={
           modelDeployPrefillInfo.modelArtifactUri &&

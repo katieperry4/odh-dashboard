@@ -42,6 +42,7 @@ const KServeInferenceServiceTable: React.FC = () => {
     },
     serverSecrets: { refresh: refreshServerSecrets },
     filterTokens,
+    pvcs: { data: pvcs },
   } = React.useContext(ProjectDetailsContext);
   const columns = getKServeInferenceServiceColumns();
 
@@ -96,6 +97,7 @@ const KServeInferenceServiceTable: React.FC = () => {
               editKserveResources.inferenceService.spec.predictor.model?.runtime,
             ),
           }}
+          pvcs={pvcs}
           onClose={(submit: boolean) => {
             setEditKServeResources(undefined);
             if (submit) {

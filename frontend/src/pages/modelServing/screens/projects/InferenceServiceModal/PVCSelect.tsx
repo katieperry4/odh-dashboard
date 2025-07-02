@@ -18,6 +18,7 @@ type PvcSelectProps = {
   setIsConnectionValid: (isValid: boolean) => void;
   modelUri?: string;
 };
+
 export const PvcSelect: React.FC<PvcSelectProps> = ({
   pvcs,
   selectedPVC,
@@ -26,12 +27,43 @@ export const PvcSelect: React.FC<PvcSelectProps> = ({
   setIsConnectionValid,
   modelUri,
 }) => {
+  const [modelPath, setModelPath] = React.useState('');
+  const lastPVCNameRef = React.useRef<string | undefined>();
+
+  React.useEffect(() => {
+    if (selectedPVC && selectedPVC.metadata.name !== lastPVCNameRef.current) {
+      const { modelPath: annotatedPath } = getModelServingPVCAnnotations(selectedPVC);
+      const path = annotatedPath ?? '';
+      setModelPath(path);
+      setModelUri(generateModelUri(selectedPVC.metadata.name, path));
+      lastPVCNameRef.current = selectedPVC.metadata.name;
+    } else if (!selectedPVC) {
+      setModelPath('');
+      setModelUri('');
+      lastPVCNameRef.current = undefined;
+    }
+  }, [selectedPVC, setModelUri]);
+
+  const handleModelPathChange = (newPath: string): void => {
+    setModelPath(newPath);
+    if (selectedPVC) {
+      setModelUri(generateModelUri(selectedPVC.metadata.name, newPath));
+    }
+  };
+
+  const generateModelUri = (pvcName: string, path: string): string => `pvc://${pvcName}/${path}`;
+
+  React.useEffect(() => {
+    const isValidPVCUri = (uri: string): boolean => /^pvc:\/\/[a-z0-9-]+\/\S+$/.test(uri);
+    setIsConnectionValid(!!selectedPVC && isValidPVCUri(modelUri ?? ''));
+  }, [selectedPVC, modelUri, setIsConnectionValid]);
+
   const options: TypeaheadSelectOption[] = React.useMemo(
     () =>
       pvcs?.map((pvc) => {
         const displayName = getDisplayNameFromK8sResource(pvc);
-        const { modelPath, modelName } = getModelServingPVCAnnotations(pvc);
-        const isModelServingPVC = !!modelPath || !!modelName;
+        const { modelPath: modelPathAnnotation, modelName } = getModelServingPVCAnnotations(pvc);
+        const isModelServingPVC = !!modelPathAnnotation || !!modelName;
         return {
           content: displayName,
           value: pvc.metadata.name,
@@ -49,23 +81,9 @@ export const PvcSelect: React.FC<PvcSelectProps> = ({
       }) || [],
     [pvcs, selectedPVC],
   );
-  const accessMode = selectedPVC ? getModelServingPVCAccessMode(selectedPVC) : undefined;
-  const { modelPath } = React.useMemo(() => {
-    if (selectedPVC) {
-      const { modelPath: selectedModelPath, modelName: selectedModelName } =
-        getModelServingPVCAnnotations(selectedPVC);
-      return {
-        modelPath: selectedModelPath ?? undefined,
-        modelName: selectedModelName ?? undefined,
-      };
-    }
-    return { modelPath: undefined, modelName: undefined };
-  }, [selectedPVC]);
-  const isValidPVCUri = (uri: string): boolean => /^pvc:\/\/[a-z0-9-]+\/\S+$/.test(uri);
 
-  React.useEffect(() => {
-    setIsConnectionValid(!!selectedPVC && isValidPVCUri(modelUri ?? ''));
-  }, [selectedPVC, modelPath, modelUri, setIsConnectionValid]);
+  const accessMode = selectedPVC ? getModelServingPVCAccessMode(selectedPVC) : undefined;
+
   return (
     <FormGroup label="Cluster storage" isRequired>
       <Stack hasGutter>
@@ -91,7 +109,11 @@ export const PvcSelect: React.FC<PvcSelectProps> = ({
         )}
         {selectedPVC && (
           <StackItem>
-            <PVCFields selectedPVC={selectedPVC} setModelUri={setModelUri} modelPath={modelPath} />
+            <PVCFields
+              selectedPVC={selectedPVC}
+              modelPath={modelPath}
+              setModelUri={handleModelPathChange}
+            />
           </StackItem>
         )}
       </Stack>

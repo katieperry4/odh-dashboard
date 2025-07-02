@@ -106,7 +106,8 @@ const AddModelFooter: React.FC<AddModelFooterProps> = ({ selectedPlatform, isNIM
       ) : null}
       {modalShown && !isProjectModelMesh && !isNIM ? (
         <ManageKServeModal
-          projectContext={{ currentProject, connections, pvcs: pvcs.data }}
+          projectContext={{ currentProject, connections }}
+          pvcs={pvcs.data}
           servingRuntimeTemplates={templatesEnabled.filter((template) =>
             getTemplateEnabledForPlatform(template, ServingRuntimePlatform.SINGLE),
           )}

@@ -66,6 +66,7 @@ import usePrefillModelDeployModal, {
 import { useKServeDeploymentMode } from '#~/pages/modelServing/useKServeDeploymentMode';
 import { SERVING_RUNTIME_SCOPE } from '#~/pages/modelServing/screens/const';
 import { useModelDeploymentNotification } from '#~/pages/modelServing/screens/projects/useModelDeploymentNotification';
+import { getDashboardPvcs } from '#~/api/k8s/pvcs';
 import KServeAutoscalerReplicaSection from './KServeAutoscalerReplicaSection';
 import EnvironmentVariablesSection from './EnvironmentVariablesSection';
 import ServingRuntimeArgsSection from './ServingRuntimeArgsSection';
@@ -85,12 +86,12 @@ type ManageKServeModalProps = {
   shouldFormHidden?: boolean;
   projectSection?: React.ReactNode;
   existingUriOption?: string;
+  pvcs?: PersistentVolumeClaimKind[] | [];
 } & EitherOrNone<
   {
     projectContext?: {
       currentProject: ProjectKind;
       connections: Connection[];
-      pvcs: PersistentVolumeClaimKind[] | [];
     };
   },
   {
@@ -105,6 +106,7 @@ type ManageKServeModalProps = {
 const ManageKServeModal: React.FC<ManageKServeModalProps> = ({
   onClose,
   servingRuntimeTemplates,
+  pvcs,
   projectContext,
   editInfo,
   projectSection,
@@ -141,6 +143,16 @@ const ManageKServeModal: React.FC<ManageKServeModalProps> = ({
   const namespace = currentProjectName || createDataInferenceService.project;
 
   const projectTemplates = useTemplates(namespace);
+  const [fallbackPvcs, setFallbackPvcs] = React.useState<PersistentVolumeClaimKind[]>([]);
+  React.useEffect(() => {
+    getDashboardPvcs(namespace)
+      .then((data) => {
+        setFallbackPvcs(data.filter((pvc) => pvc.metadata.namespace === namespace));
+      })
+      .catch(() => {
+        setFallbackPvcs([]);
+      });
+  }, [namespace]);
 
   const customServingRuntimesEnabled = useCustomServingRuntimesEnabled();
   const [allowCreate] = useAccessReview({
@@ -475,7 +487,7 @@ const ManageKServeModal: React.FC<ManageKServeModalProps> = ({
                 setConnection={setConnection}
                 setIsConnectionValid={setIsConnectionValid}
                 connections={connections}
-                pvcs={projectContext?.pvcs}
+                pvcs={pvcs?.length && pvcs.length > 0 ? pvcs : fallbackPvcs}
               />
             </FormSection>
           )}
