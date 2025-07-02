@@ -11,6 +11,7 @@ import {
 import { EitherOrNone } from '@openshift/dynamic-plugin-sdk';
 import {
   getCreateInferenceServiceLabels,
+  getProjectModelServingPlatform,
   getSubmitInferenceServiceResourceFn,
   getSubmitServingRuntimeResourcesFn,
   useCreateInferenceServiceObject,
@@ -67,6 +68,7 @@ import { useKServeDeploymentMode } from '#~/pages/modelServing/useKServeDeployme
 import { SERVING_RUNTIME_SCOPE } from '#~/pages/modelServing/screens/const';
 import { useModelDeploymentNotification } from '#~/pages/modelServing/screens/projects/useModelDeploymentNotification';
 import { getDashboardPvcs } from '#~/api/k8s/pvcs';
+import useServingPlatformStatuses from '#~/pages/modelServing/useServingPlatformStatuses';
 import KServeAutoscalerReplicaSection from './KServeAutoscalerReplicaSection';
 import EnvironmentVariablesSection from './EnvironmentVariablesSection';
 import ServingRuntimeArgsSection from './ServingRuntimeArgsSection';
@@ -141,13 +143,19 @@ const ManageKServeModal: React.FC<ManageKServeModalProps> = ({
     createDataInferenceService.isKServeRawDeployment;
   const currentProjectName = projectContext?.currentProject.metadata.name;
   const namespace = currentProjectName || createDataInferenceService.project;
+  const currentProject = projectContext?.currentProject;
+  const platformStatuses = useServingPlatformStatuses();
+  const { platform } = currentProject
+    ? getProjectModelServingPlatform(currentProject, platformStatuses)
+    : { platform: undefined };
 
   const projectTemplates = useTemplates(namespace);
   const [fallbackPvcs, setFallbackPvcs] = React.useState<PersistentVolumeClaimKind[]>([]);
   React.useEffect(() => {
     getDashboardPvcs(namespace)
       .then((data) => {
-        setFallbackPvcs(data.filter((pvc) => pvc.metadata.namespace === namespace));
+        //setFallbackPvcs(data.filter((pvc) => pvc.metadata.namespace === namespace));
+        setFallbackPvcs(data);
       })
       .catch(() => {
         setFallbackPvcs([]);
@@ -488,6 +496,7 @@ const ManageKServeModal: React.FC<ManageKServeModalProps> = ({
                 setIsConnectionValid={setIsConnectionValid}
                 connections={connections}
                 pvcs={pvcs?.length && pvcs.length > 0 ? pvcs : fallbackPvcs}
+                platform={platform}
               />
             </FormSection>
           )}

@@ -39,8 +39,9 @@ import {
 import { isModelPathValid } from '#~/pages/modelServing/screens/projects/utils';
 import DashboardPopupIconButton from '#~/concepts/dashboard/DashboardPopupIconButton';
 import { AccessTypes } from '#~/pages/projects/dataConnections/const';
-import { SupportedArea, useIsAreaAvailable } from '#~/concepts/areas/index.ts';
+import { SupportedArea, useIsAreaAvailable } from '#~/concepts/areas/index';
 import { PersistentVolumeClaimKind } from '#~/k8sTypes.ts';
+import { ServingRuntimePlatform } from '#~/types';
 import ConnectionS3FolderPathField from './ConnectionS3FolderPathField';
 import ConnectionOciPathField from './ConnectionOciPathField';
 import { ConnectionOciAlert } from './ConnectionOciAlert';
@@ -247,6 +248,7 @@ type Props = {
   connections?: LabeledConnection[];
   pvcs?: PersistentVolumeClaimKind[];
   connectionTypeFilter?: (ct: ConnectionTypeConfigMapObj) => boolean;
+  platform?: ServingRuntimePlatform;
 };
 
 // todo convert 'data' into a generic 'modelLocation' obj
@@ -264,8 +266,10 @@ export const ConnectionSection: React.FC<Props> = ({
   connections,
   pvcs,
   connectionTypeFilter = () => true,
+  platform,
 }) => {
   const [modelServingConnectionTypes] = useWatchConnectionTypes(true);
+
   const connectionTypes = React.useMemo(
     () => modelServingConnectionTypes.filter(connectionTypeFilter),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -306,7 +310,7 @@ export const ConnectionSection: React.FC<Props> = ({
 
   return (
     <>
-      {pvcServingEnabled && (
+      {pvcServingEnabled && platform === ServingRuntimePlatform.SINGLE && (
         <Radio
           label="Existing cluster storage"
           name="pvc-serving-radio"

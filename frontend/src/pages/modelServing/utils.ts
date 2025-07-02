@@ -390,8 +390,3 @@ export const getModelServingPVCAnnotations = (
 
   return { modelName, modelPath };
 };
-
-export const getModelServingPVCAccessMode = (pvc: PersistentVolumeClaimKind): string | null => {
-  const accessMode = pvc.spec.accessModes[0];
-  return accessMode;
-};

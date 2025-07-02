@@ -3,11 +3,9 @@ import { Alert, FormGroup, Label, Stack, StackItem } from '@patternfly/react-cor
 import TypeaheadSelect, { TypeaheadSelectOption } from '#~/components/TypeaheadSelect';
 import { PersistentVolumeClaimKind } from '#~/k8sTypes';
 import { getDisplayNameFromK8sResource } from '#~/concepts/k8s/utils';
-import {
-  getModelServingPVCAccessMode,
-  getModelServingPVCAnnotations,
-} from '#~/pages/modelServing/utils';
-import { PVCAccessMode } from '#~/types';
+import { getModelServingPVCAnnotations } from '#~/pages/modelServing/utils';
+import { AccessMode } from '#~/pages/storageClasses/storageEnums';
+import { getPvcAccessMode } from '#~/pages/projects/utils';
 import { PVCFields } from './PVCFields';
 
 type PvcSelectProps = {
@@ -82,7 +80,7 @@ export const PvcSelect: React.FC<PvcSelectProps> = ({
     [pvcs, selectedPVC],
   );
 
-  const accessMode = selectedPVC ? getModelServingPVCAccessMode(selectedPVC) : undefined;
+  const accessMode = selectedPVC ? getPvcAccessMode(selectedPVC) : undefined;
 
   return (
     <FormGroup label="Cluster storage" isRequired>
@@ -100,7 +98,7 @@ export const PvcSelect: React.FC<PvcSelectProps> = ({
             }}
           />
         </StackItem>
-        {selectedPVC && accessMode !== PVCAccessMode.READ_WRITE_MANY && (
+        {selectedPVC && accessMode !== AccessMode.RWX && (
           <StackItem>
             <Alert variant="warning" title="Warning" isInline>
               This cluster storage access mode is not ReadWriteMany.
