@@ -164,7 +164,7 @@ const ManageKServeModal: React.FC<ManageKServeModalProps> = ({
   const platformStatuses = useServingPlatformStatuses();
   const platform = getPlatform(platformStatuses, currentProject, editInfo);
 
-  const utilPvcs = usePvcs(namespace);
+  const pvcs = usePvcs(namespace);
 
   const projectTemplates = useTemplates(namespace);
 
@@ -501,7 +501,7 @@ const ManageKServeModal: React.FC<ManageKServeModalProps> = ({
                 setConnection={setConnection}
                 setIsConnectionValid={setIsConnectionValid}
                 connections={connections}
-                pvcs={utilPvcs.data}
+                pvcs={pvcs.data}
                 platform={platform}
               />
             </FormSection>

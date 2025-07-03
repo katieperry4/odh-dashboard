@@ -175,10 +175,7 @@ const DeployPrefilledModelModalContents: React.FC<
         servingRuntimeTemplates={getKServeTemplates(templates, templateOrder, templateDisablement)}
         shouldFormHidden={!!error}
         modelDeployPrefillInfo={modelDeployPrefillInfo}
-        projectContext={{
-          currentProject: selectedProject,
-          connections,
-        }}
+        projectContext={{ currentProject: selectedProject, connections }}
         projectSection={projectSection}
         existingUriOption={
           modelDeployPrefillInfo.modelArtifactUri &&
