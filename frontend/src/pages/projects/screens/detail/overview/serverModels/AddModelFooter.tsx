@@ -36,7 +36,6 @@ const AddModelFooter: React.FC<AddModelFooterProps> = ({ selectedPlatform, isNIM
     serverSecrets: { refresh: refreshTokens },
     inferenceServices: { refresh: refreshInferenceServices },
     currentProject,
-    pvcs,
   } = React.useContext(ProjectDetailsContext);
 
   const templatesSorted = getSortedTemplates(templates, templateOrder);
@@ -107,7 +106,6 @@ const AddModelFooter: React.FC<AddModelFooterProps> = ({ selectedPlatform, isNIM
       {modalShown && !isProjectModelMesh && !isNIM ? (
         <ManageKServeModal
           projectContext={{ currentProject, connections }}
-          pvcs={pvcs.data}
           servingRuntimeTemplates={templatesEnabled.filter((template) =>
             getTemplateEnabledForPlatform(template, ServingRuntimePlatform.SINGLE),
           )}

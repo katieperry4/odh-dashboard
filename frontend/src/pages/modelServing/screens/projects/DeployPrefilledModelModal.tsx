@@ -25,7 +25,6 @@ import { getKServeTemplates } from '#~/pages/modelServing/customServingRuntimes/
 import { isRedHatRegistryUri } from '#~/pages/modelRegistry/screens/utils';
 import useServingConnections from '#~/pages/projects/screens/detail/connections/useServingConnections';
 import { isOciModelUri } from '#~/pages/modelServing/utils';
-import { ProjectDetailsContext } from '#~/pages/projects/ProjectDetailsContext';
 import { ModelDeployPrefillInfo } from './usePrefillModelDeployModal';
 
 interface DeployPrefilledModelModalProps {
@@ -73,7 +72,6 @@ const DeployPrefilledModelModalContents: React.FC<
       loaded: templateDisablementLoaded,
     },
   } = React.useContext(ModelServingContext);
-  const { pvcs } = React.useContext(ProjectDetailsContext);
   const servingContextLoaded = templatesLoaded && templateOrderLoaded && templateDisablementLoaded;
 
   const servingPlatformStatuses = useServingPlatformStatuses();
@@ -181,7 +179,6 @@ const DeployPrefilledModelModalContents: React.FC<
           currentProject: selectedProject,
           connections,
         }}
-        pvcs={pvcs.data}
         projectSection={projectSection}
         existingUriOption={
           modelDeployPrefillInfo.modelArtifactUri &&

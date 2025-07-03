@@ -24,7 +24,6 @@ import {
   InferenceServiceKind,
   AccessReviewResourceAttributes,
   SecretKind,
-  PersistentVolumeClaimKind,
 } from '#~/k8sTypes';
 import {
   getKServeContainerArgs,
@@ -69,9 +68,9 @@ import usePrefillModelDeployModal, {
 import { useKServeDeploymentMode } from '#~/pages/modelServing/useKServeDeploymentMode';
 import { SERVING_RUNTIME_SCOPE } from '#~/pages/modelServing/screens/const';
 import { useModelDeploymentNotification } from '#~/pages/modelServing/screens/projects/useModelDeploymentNotification';
-import { getDashboardPvcs } from '#~/api/k8s/pvcs';
 import useServingPlatformStatuses from '#~/pages/modelServing/useServingPlatformStatuses';
 import { ServingRuntimePlatform } from '#~/types.ts';
+import usePvcs from '#~/pages/modelServing/usePvcs';
 import KServeAutoscalerReplicaSection from './KServeAutoscalerReplicaSection';
 import EnvironmentVariablesSection from './EnvironmentVariablesSection';
 import ServingRuntimeArgsSection from './ServingRuntimeArgsSection';
@@ -91,7 +90,6 @@ type ManageKServeModalProps = {
   shouldFormHidden?: boolean;
   projectSection?: React.ReactNode;
   existingUriOption?: string;
-  pvcs?: PersistentVolumeClaimKind[] | [];
 } & EitherOrNone<
   {
     projectContext?: {
@@ -111,7 +109,6 @@ type ManageKServeModalProps = {
 const ManageKServeModal: React.FC<ManageKServeModalProps> = ({
   onClose,
   servingRuntimeTemplates,
-  pvcs,
   projectContext,
   editInfo,
   projectSection,
@@ -161,33 +158,15 @@ const ManageKServeModal: React.FC<ManageKServeModalProps> = ({
   const isAuthAvailable =
     useIsAreaAvailable(SupportedArea.K_SERVE_AUTH).status ||
     createDataInferenceService.isKServeRawDeployment;
-
   const currentProjectName = projectContext?.currentProject.metadata.name;
   const namespace = currentProjectName || createDataInferenceService.project;
   const currentProject = projectContext?.currentProject;
   const platformStatuses = useServingPlatformStatuses();
   const platform = getPlatform(platformStatuses, currentProject, editInfo);
 
-  const projectTemplates = useTemplates(namespace);
-  const [fallbackPvcs, setFallbackPvcs] = React.useState<PersistentVolumeClaimKind[]>([]);
+  const utilPvcs = usePvcs(namespace);
 
-  React.useEffect(() => {
-    let isCurrent = true;
-    getDashboardPvcs(namespace)
-      .then((data) => {
-        if (isCurrent) {
-          setFallbackPvcs(data);
-        }
-      })
-      .catch(() => {
-        if (isCurrent) {
-          setFallbackPvcs([]);
-        }
-      });
-    return () => {
-      isCurrent = false;
-    };
-  }, [namespace]);
+  const projectTemplates = useTemplates(namespace);
 
   const customServingRuntimesEnabled = useCustomServingRuntimesEnabled();
   const [allowCreate] = useAccessReview({
@@ -522,7 +501,7 @@ const ManageKServeModal: React.FC<ManageKServeModalProps> = ({
                 setConnection={setConnection}
                 setIsConnectionValid={setIsConnectionValid}
                 connections={connections}
-                pvcs={pvcs?.length && pvcs.length > 0 ? pvcs : fallbackPvcs}
+                pvcs={utilPvcs.data}
                 platform={platform}
               />
             </FormSection>

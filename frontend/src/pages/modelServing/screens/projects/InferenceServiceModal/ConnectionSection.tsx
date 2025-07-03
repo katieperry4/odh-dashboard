@@ -307,7 +307,6 @@ export const ConnectionSection: React.FC<Props> = ({
   if (!loaded) {
     return <Skeleton />;
   }
-  //console.log(platform);
   return (
     <>
       {pvcServingEnabled && platform === ServingRuntimePlatform.SINGLE && (

@@ -80,7 +80,6 @@ const ModelServingPlatform: React.FC = () => {
     servingRuntimeTemplateOrder: { data: templateOrder },
     servingRuntimeTemplateDisablement: { data: templateDisablement },
     connections: { data: connections },
-    pvcs: { data: pvcs },
     serverSecrets: { refresh: refreshTokens },
     inferenceServices: {
       data: { items: inferenceServices },
@@ -211,7 +210,6 @@ const ModelServingPlatform: React.FC = () => {
     return (
       <ManageKServeModal
         projectContext={{ currentProject, connections }}
-        pvcs={pvcs}
         servingRuntimeTemplates={templatesEnabled.filter((template) =>
           getTemplateEnabledForPlatform(template, ServingRuntimePlatform.SINGLE),
         )}
