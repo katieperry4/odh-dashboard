@@ -49,6 +49,7 @@ const StorageTableRow: React.FC<StorageTableRowProps> = ({
   const workbenchEnabled = useIsAreaAvailable(SupportedArea.WORKBENCHES).status;
   const storageClassConfig = obj.storageClass && getStorageClassConfig(obj.storageClass);
   const modelStorage = isModelStorage(obj.pvc);
+  const pvcServingEnabled = useIsAreaAvailable(SupportedArea.PVCSERVING).status;
   const actions: IAction[] = [
     {
       title: 'Edit storage',
@@ -154,7 +155,9 @@ const StorageTableRow: React.FC<StorageTableRowProps> = ({
             <FlexItem spacer={{ default: 'spacerSm' }}>
               <HddIcon />
             </FlexItem>
-            <FlexItem>{` ${modelStorage ? 'Model storage' : 'General purpose'}`}</FlexItem>
+            <FlexItem>{` ${
+              pvcServingEnabled && modelStorage ? 'Model storage' : 'General purpose'
+            }`}</FlexItem>
           </Flex>
         </Content>
       </Td>

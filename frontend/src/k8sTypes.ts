@@ -1282,6 +1282,7 @@ export type DashboardCommonConfig = {
   disableKueue: boolean;
   disableModelTraining: boolean;
   disableFeatureStore?: boolean;
+  disablePVCServing?: boolean;
 };
 
 // [1] Intentionally disjointed fields from the CRD in this type definition

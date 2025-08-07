@@ -357,6 +357,12 @@ describe('ClusterStorage', () => {
   });
 
   it('Add cluster storage with model storage', () => {
+    cy.interceptOdh(
+      'GET /api/config',
+      mockDashboardConfig({
+        disablePVCServing: false,
+      }),
+    );
     initInterceptors({ isEmpty: true });
     storageClassesPage.mockGetStorageClasses([
       openshiftDefaultStorageClass,
@@ -400,6 +406,12 @@ describe('ClusterStorage', () => {
       openshiftDefaultStorageClass,
       buildMockStorageClass(otherStorageClass, { isEnabled: true }),
     ]);
+    cy.interceptOdh(
+      'GET /api/config',
+      mockDashboardConfig({
+        disablePVCServing: false,
+      }),
+    );
     clusterStorage.visit('test-project');
     const modelStorageRow = clusterStorage.getClusterStorageRow('Model Storage');
     modelStorageRow.findStorageTypeColumn().should('contain.text', 'Model storage');
@@ -413,6 +425,12 @@ describe('ClusterStorage', () => {
       openshiftDefaultStorageClass,
       buildMockStorageClass(otherStorageClass, { isEnabled: true }),
     ]);
+    cy.interceptOdh(
+      'GET /api/config',
+      mockDashboardConfig({
+        disablePVCServing: false,
+      }),
+    );
     clusterStorage.visit('test-project');
     const modelStorageRow = clusterStorage.getClusterStorageRow('Model Storage');
     modelStorageRow.findKebabAction('Edit storage').click();

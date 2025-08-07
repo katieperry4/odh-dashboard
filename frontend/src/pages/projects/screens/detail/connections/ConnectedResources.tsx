@@ -12,6 +12,7 @@ import { useInferenceServicesForConnection } from '#~/pages/projects/useInferenc
 import { PersistentVolumeClaimKind } from '#~/k8sTypes';
 import { isModelStorage } from '#~/pages/projects/screens/detail/storage/utils';
 import { EitherNotBoth } from '#~/typeHelpers';
+import { SupportedArea, useIsAreaAvailable } from '#~/concepts/areas/index';
 
 export type ConnectedResourcesProps = EitherNotBoth<
   { connection: Connection },
@@ -19,6 +20,7 @@ export type ConnectedResourcesProps = EitherNotBoth<
 >;
 
 const ConnectedResources: React.FC<ConnectedResourcesProps> = ({ connection, pvc }) => {
+  const pvcServingEnabled = useIsAreaAvailable(SupportedArea.PVCSERVING).status;
   const { notebooks: connectedNotebooks, loaded: notebooksLoaded } = useRelatedNotebooks(
     connection
       ? ConnectedNotebookContext.EXISTING_DATA_CONNECTION
@@ -36,7 +38,11 @@ const ConnectedResources: React.FC<ConnectedResourcesProps> = ({ connection, pvc
     return <Spinner size="sm" />;
   }
 
-  if (!connectedNotebooks.length && !connectedModels.length && !modelStorage) {
+  if (
+    !connectedNotebooks.length &&
+    !connectedModels.length &&
+    (!modelStorage || !pvcServingEnabled)
+  ) {
     return '-';
   }
 
@@ -70,8 +76,8 @@ const ConnectedResources: React.FC<ConnectedResourcesProps> = ({ connection, pvc
   return (
     <LabelGroup>
       {renderNotebookLabels()}
+      {pvcServingEnabled && renderPVCModelLabel()}
       {renderModelLabels()}
-      {renderPVCModelLabel()}
     </LabelGroup>
   );
 };

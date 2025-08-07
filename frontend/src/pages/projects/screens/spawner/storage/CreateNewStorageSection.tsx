@@ -68,6 +68,8 @@ const CreateNewStorageSection = <D extends StorageData>({
     setData('modelPath', '');
   };
 
+  const pvcServingEnabled = useIsAreaAvailable(SupportedArea.PVCSERVING).status;
+
   React.useEffect(() => {
     setData('name', clusterStorageNameDesc.name);
     setData('k8sName', clusterStorageNameDesc.k8sName.value);
@@ -122,14 +124,16 @@ const CreateNewStorageSection = <D extends StorageData>({
           />
         </>
       )}
-      <PVCContextField
-        modelName={data.modelName || ''}
-        modelPath={data.modelPath || ''}
-        setModelName={(name) => setData('modelName', name)}
-        setModelPath={(path) => setData('modelPath', path)}
-        setValid={setIsValidModelPath}
-        removeModelAnnotations={removeModelAnnotations}
-      />
+      {pvcServingEnabled && (
+        <PVCContextField
+          modelName={data.modelName || ''}
+          modelPath={data.modelPath || ''}
+          setModelName={(name) => setData('modelName', name)}
+          setModelPath={(path) => setData('modelPath', path)}
+          setValid={setIsValidModelPath}
+          removeModelAnnotations={removeModelAnnotations}
+        />
+      )}
 
       <PVSizeField
         fieldID="create-new-storage-size"

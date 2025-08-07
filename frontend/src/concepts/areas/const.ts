@@ -55,6 +55,7 @@ export const modelServingFlags = {
   disableNIMModelServing: false,
   disablePerformanceMetrics: false,
   disableTrustyBiasMetrics: false,
+  disablePVCServing: true,
 } satisfies Partial<DashboardCommonConfig>;
 
 // Group 4: Advanced AI/ML Features & Pipelines
@@ -121,6 +122,9 @@ export const SupportedAreasStateMap: SupportedAreasState = {
   [SupportedArea.DS_PROJECTS_PERMISSIONS]: {
     featureFlags: ['disableProjectSharing'],
     reliantAreas: [SupportedArea.DS_PROJECTS_VIEW],
+  },
+  [SupportedArea.PVCSERVING]: {
+    featureFlags: ['disablePVCServing'],
   },
   [SupportedArea.K_SERVE]: {
     featureFlags: ['disableKServe'],

@@ -69,7 +69,7 @@ describe('Verify a model can be deployed from a PVC', () => {
   });
   it(
     'should deploy a model from a PVC',
-    { tags: ['@Smoke', '@SmokeSet3', '@Dashboard', '@Modelserving'] },
+    { tags: ['@Smoke', '@SmokeSet3', '@Dashboard', '@Modelserving', '@Featureflagged'] },
     () => {
       cy.step('log into application with ${HTPASSWD_CLUSTER_ADMIN_USER.USERNAME}');
       cy.visitWithLogin('/', HTPASSWD_CLUSTER_ADMIN_USER);
@@ -79,6 +79,12 @@ describe('Verify a model can be deployed from a PVC', () => {
       projectListPage.visit();
       projectListPage.filterProjectByName(projectName);
       projectListPage.findProjectLink(projectName).click();
+
+      // Flip the feature flag
+      cy.window().then((win) => {
+        win.sessionStorage.setItem('odh-feature-flags', '{"disablePVCServing": false}');
+      });
+      cy.reload();
 
       // Navigate to cluster storage page
       cy.step('Navigate to cluster storage page');

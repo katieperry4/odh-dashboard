@@ -45,6 +45,7 @@ import {
 import DashboardPopupIconButton from '#~/concepts/dashboard/DashboardPopupIconButton';
 import { AccessTypes } from '#~/pages/projects/dataConnections/const';
 import { PersistentVolumeClaimKind } from '#~/k8sTypes';
+import { SupportedArea, useIsAreaAvailable } from '#~/concepts/areas/index';
 import ConnectionS3FolderPathField from './ConnectionS3FolderPathField';
 import ConnectionOciPathField from './ConnectionOciPathField';
 import { ConnectionOciAlert } from './ConnectionOciAlert';
@@ -307,6 +308,8 @@ export const ConnectionSection: React.FC<Props> = ({
   const didInitialPVCPrefill = React.useRef(false);
   const foundPVC = React.useRef(false);
 
+  const pvcServingEnabled = useIsAreaAvailable(SupportedArea.PVCSERVING).status;
+
   const handlePVCPrefill = React.useCallback(
     (uri: string) => {
       const isPVC = isPVCUri(uri);
@@ -374,7 +377,7 @@ export const ConnectionSection: React.FC<Props> = ({
   }
   return (
     <>
-      {pvcs && pvcs.length > 0 && (
+      {pvcServingEnabled && pvcs && pvcs.length > 0 && (
         <Radio
           label="Existing cluster storage"
           name="pvc-serving-radio"
