@@ -1,0 +1,63 @@
+import { LabeledConnection } from '@odh-dashboard/internal/pages/modelServing/screens/types.js';
+
+export enum ConnectionTypeRefs {
+  S3 = 's3',
+  URI = 'uri-v1',
+  OCI = 'oci-v1',
+}
+
+export enum ModelLocationType {
+  EXISTING = 'existing',
+  URI = 'uri-v1',
+  OCI = 'oci-v1',
+  PVC = 'pvc',
+  S3 = 's3',
+}
+
+export type ModelLocation = {
+  name?: string;
+  description?: string;
+};
+
+export type ExistingModelLocation = ModelLocation & {
+  type: 'existing';
+  connection: LabeledConnection;
+  connectionType: ConnectionTypeRefs;
+  modelPath?: string; // For S3
+  modelUri?: string; // For OCI/URI
+};
+
+export type OCIModelLocation = ModelLocation & {
+  type: ModelLocationType.OCI;
+  accessType?: string;
+  secretDetails: string;
+  registryHost: string;
+  modelUri: string;
+};
+
+export type S3ModelLocation = ModelLocation & {
+  type: ModelLocationType.S3;
+  accessKey: string;
+  secretKey: string;
+  endpoint: string;
+  region?: string;
+  bucket: string;
+  path: string;
+};
+
+export type PVCModelLocation = ModelLocation & {
+  type: ModelLocationType.PVC;
+  storageUri: string;
+};
+
+export type URIModelLocation = ModelLocation & {
+  type: ModelLocationType.URI;
+  uri: string;
+};
+
+export type ModelLocationData =
+  | ExistingModelLocation
+  | OCIModelLocation
+  | S3ModelLocation
+  | PVCModelLocation
+  | URIModelLocation;
