@@ -10,14 +10,17 @@ import TypeaheadSelect, {
   TypeaheadSelectOption,
 } from '@odh-dashboard/internal/components/TypeaheadSelect';
 import { ConnectionDetailsHelperText } from '@odh-dashboard/internal/concepts/connectionTypes/ConnectionDetailsHelperText';
-import { getConnectionTypeDisplayName } from '@odh-dashboard/internal/concepts/connectionTypes/utils';
+import {
+  getConnectionTypeDisplayName,
+  getConnectionTypeRef,
+} from '@odh-dashboard/internal/concepts/connectionTypes/utils';
 import {
   Connection,
   ConnectionTypeConfigMapObj,
 } from '@odh-dashboard/internal/concepts/connectionTypes/types';
 import S3ConnectionField from './S3ConnectionField';
 import OCIConnectionField from './OCIConnectionField';
-import { ConnectionTypeRefs, ModelLocationData } from './types';
+import { ConnectionTypeRefs, ModelLocationData, ModelLocationType } from './types';
 
 type ExistingConnectionFieldProps = {
   children: React.ReactNode;
@@ -28,7 +31,8 @@ type ExistingConnectionFieldProps = {
   selectedConnectionType?: ConnectionTypeConfigMapObj;
   labelHelp?: React.ReactElement;
   setModelLocationData?: (data: ModelLocationData | undefined) => void;
-  resetModelLocationData?: () => void;
+  resetModelLocationData: () => void;
+  modelLocationData?: ModelLocationData;
 };
 
 export const ExistingConnectionField: React.FC<ExistingConnectionFieldProps> = ({
@@ -41,8 +45,8 @@ export const ExistingConnectionField: React.FC<ExistingConnectionFieldProps> = (
   labelHelp,
   setModelLocationData,
   resetModelLocationData,
+  modelLocationData,
 }) => {
-  console.log(setModelLocationData, resetModelLocationData);
   const options: TypeaheadSelectOption[] = React.useMemo(
     () =>
       projectConnections.map((connection) => {
@@ -95,11 +99,44 @@ export const ExistingConnectionField: React.FC<ExistingConnectionFieldProps> = (
             toggleWidth="450px"
             selectOptions={options}
             onSelect={(_, value) => {
+              if (modelLocationData) {
+                console.log('resetModelLocationData');
+                resetModelLocationData();
+              }
+
               const newConnection = projectConnections.find(
-                (c) => getResourceNameFromK8sResource(c.connection) === value,
+                (conn) => getResourceNameFromK8sResource(conn.connection) === value,
+              )?.connection;
+              if (!newConnection) return;
+              onSelect(newConnection);
+              const newConnectionType = connectionTypes.find(
+                (ct) => ct.metadata.name === getConnectionTypeRef(newConnection),
               );
-              if (newConnection) {
-                onSelect(newConnection.connection);
+              if (newConnectionType?.metadata.name === ConnectionTypeRefs.S3) {
+                setModelLocationData?.({
+                  type: ModelLocationType.S3,
+                  accessKey: newConnection.data?.AWS_ACCESS_KEY_ID ?? '',
+                  secretKey: newConnection.data?.AWS_SECRET_ACCESS_KEY ?? '',
+                  endpoint: newConnection.data?.AWS_S3_ENDPOINT ?? '',
+                  region: newConnection.data?.AWS_DEFAULT_REGION ?? '',
+                  bucket: newConnection.data?.AWS_S3_BUCKET ?? '',
+                  path: newConnection.data?.AWS_S3_FOLDER_PATH ?? '',
+                });
+              }
+              if (newConnectionType?.metadata.name === ConnectionTypeRefs.OCI) {
+                setModelLocationData?.({
+                  type: ModelLocationType.OCI,
+                  secretDetails: newConnection.data?.OCI_SECRET_DETAILS ?? '',
+                  registryHost: newConnection.data?.OCI_HOST ?? '',
+                  modelUri: newConnection.data?.OCI_MODEL_URI ?? '',
+                });
+              }
+              if (newConnectionType?.metadata.name === ConnectionTypeRefs.URI) {
+                console.log('setting model uri');
+                setModelLocationData?.({
+                  type: ModelLocationType.URI,
+                  uri: newConnection.data?.URI ?? '',
+                });
               }
             }}
             popperProps={{ appendTo: 'inline' }}

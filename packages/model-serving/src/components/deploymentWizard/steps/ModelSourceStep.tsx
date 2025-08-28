@@ -39,6 +39,7 @@ export const ModelSourceStepContent: React.FC<ModelSourceStepProps> = ({
         project={project}
         setModelLocationData={wizardState.handlers.setModelLocationData}
         resetModelLocationData={wizardState.handlers.resetModelLocationData}
+        modelLocationData={wizardState.data.modelLocationData}
       />
       <ModelTypeSelectField
         modelType={wizardState.data.modelTypeField}

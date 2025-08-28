@@ -37,7 +37,8 @@ type ModelLocationInputFieldsProps = {
   setSelectedConnection: (connection: Connection) => void;
   selectedConnectionType: ConnectionTypeConfigMapObj | undefined;
   setModelLocationData?: (data: ModelLocationData | undefined) => void;
-  resetModelLocationData?: () => void;
+  resetModelLocationData: () => void;
+  modelLocationData?: ModelLocationData;
 };
 
 export const ModelLocationInputFields: React.FC<ModelLocationInputFieldsProps> = ({
@@ -49,6 +50,7 @@ export const ModelLocationInputFields: React.FC<ModelLocationInputFieldsProps> =
   selectedConnectionType,
   setModelLocationData,
   resetModelLocationData,
+  modelLocationData,
 }) => {
   if (modelLocation === ModelLocationType.EXISTING) {
     return (
@@ -62,6 +64,7 @@ export const ModelLocationInputFields: React.FC<ModelLocationInputFieldsProps> =
         selectedConnectionType={selectedConnectionType}
         setModelLocationData={setModelLocationData}
         resetModelLocationData={resetModelLocationData}
+        modelLocationData={modelLocationData}
       >
         {selectedConnectionType &&
           isModelServingCompatible(selectedConnectionType, ModelServingCompatibleTypes.OCI) && (

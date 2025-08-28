@@ -61,7 +61,8 @@ type ModelLocationSelectFieldProps = {
   validationIssues?: ZodIssue[];
   project: ProjectKind | null;
   setModelLocationData?: (data: ModelLocationData | undefined) => void;
-  resetModelLocationData?: () => void;
+  resetModelLocationData: () => void;
+  modelLocationData?: ModelLocationData;
 };
 export const ModelLocationSelectField: React.FC<ModelLocationSelectFieldProps> = ({
   modelLocation,
@@ -71,6 +72,7 @@ export const ModelLocationSelectField: React.FC<ModelLocationSelectFieldProps> =
   project,
   setModelLocationData,
   resetModelLocationData,
+  modelLocationData,
 }) => {
   const [fetchedConnections] = useServingConnections(project?.metadata.name ?? '');
   const { connections } = useLabeledConnections(undefined, fetchedConnections);
@@ -86,7 +88,6 @@ export const ModelLocationSelectField: React.FC<ModelLocationSelectFieldProps> =
       ),
     [modelServingConnectionTypes, selectedConnection],
   );
-
   return (
     <FormGroup fieldId="model-location-select" label="Model location" isRequired>
       <FormHelperText>
@@ -118,7 +119,8 @@ export const ModelLocationSelectField: React.FC<ModelLocationSelectFieldProps> =
         onChange={(key) => {
           if (isValidModelLocation(key)) {
             setModelLocation?.(key);
-            resetModelLocationData?.();
+            resetModelLocationData();
+            setSelectedConnection(undefined);
           }
         }}
         onBlur={validationProps?.onBlur}
@@ -136,6 +138,8 @@ export const ModelLocationSelectField: React.FC<ModelLocationSelectFieldProps> =
           setSelectedConnection={setSelectedConnection}
           selectedConnectionType={selectedConnectionType}
           setModelLocationData={setModelLocationData}
+          resetModelLocationData={resetModelLocationData}
+          modelLocationData={modelLocationData}
         />
       )}
     </FormGroup>
