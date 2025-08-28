@@ -9,12 +9,15 @@ import {
   ConnectionTypeValueType,
   SectionField,
 } from '@odh-dashboard/internal/concepts/connectionTypes/types';
-import { ModelLocationData, ModelLocationType } from './types';
+import { OCIConnectionTypeKeys } from '@odh-dashboard/internal/concepts/connectionTypes/utils';
+import { useCallback } from 'react';
+import { ConnectionTypeRefs, ModelLocationData, ModelLocationType } from './types';
+import S3ConnectionField from './S3ConnectionField';
+import OCIConnectionField from './OCIConnectionField';
 
 type Props = {
   fields?: ConnectionTypeField[];
   isPreview?: boolean;
-  //modelLocationData?: ModelLocationData;
   setModelLocationData?: (data: ModelLocationData | undefined) => void;
   connectionType: string;
 };
@@ -27,7 +30,6 @@ type FieldGroup = {
 const ConnectionTypeFormFields: React.FC<Props> = ({
   fields,
   isPreview,
-  //modelLocationData,
   setModelLocationData,
   connectionType,
 }) => {
@@ -53,25 +55,26 @@ const ConnectionTypeFormFields: React.FC<Props> = ({
     type: string,
   ): ModelLocationData => {
     switch (type) {
-      case 'uri-v1':
+      case ConnectionTypeRefs.URI:
         return {
           type: ModelLocationType.URI,
           uri: String(values.URI || ''),
         };
-      case 's3':
+      case ConnectionTypeRefs.S3:
         return {
           type: ModelLocationType.S3,
           accessKey: String(values.AWS_ACCESS_KEY_ID || ''),
           secretKey: String(values.AWS_SECRET_ACCESS_KEY || ''),
           endpoint: String(values.AWS_S3_ENDPOINT || ''),
+          region: String(values.AWS_DEFAULT_REGION || ''),
           bucket: String(values.AWS_S3_BUCKET || ''),
           path: String(values.AWS_S3_FOLDER_PATH || ''),
         };
-      case 'oci-v1':
+      case ConnectionTypeRefs.OCI:
         return {
           type: ModelLocationType.OCI,
-          secretDetails: String(values.OCI_SECRET_DETAILS || ''),
-          registryHost: String(values.OCI_REGISTRY_HOST || ''),
+          secretDetails: String(values[OCIConnectionTypeKeys[0]] || ''),
+          registryHost: String(values.OCI_HOST || ''),
           modelUri: String(values.OCI_MODEL_URI || ''),
         };
       default:
@@ -117,16 +120,63 @@ const ConnectionTypeFormFields: React.FC<Props> = ({
         </DataFormFieldGroup>
       );
     });
+  const memoizedSetModelUri = useCallback(
+    (modelUri: string | undefined) => {
+      setFieldValues((prev) => {
+        const newFieldValues = { ...prev, OCI_MODEL_URI: modelUri || '' };
+        const typedData = mapFieldValuesToLocationData(newFieldValues, connectionType);
+        setModelLocationData?.(typedData);
+        return newFieldValues;
+      });
+    },
+    [connectionType, setModelLocationData],
+  );
+  const memoizedSetModelPath = useCallback(
+    (path: string | undefined) => {
+      setFieldValues((prev) => {
+        const newFieldValues = { ...prev, AWS_S3_FOLDER_PATH: path || '' };
+        const typedData = mapFieldValuesToLocationData(newFieldValues, connectionType);
+        setModelLocationData?.(typedData);
+        return newFieldValues;
+      });
+    },
+    [connectionType, setModelLocationData],
+  );
 
+  const renderAdditionalFields = () => {
+    if (connectionType === ConnectionTypeRefs.OCI) {
+      return (
+        <OCIConnectionField
+          ociHost={getFieldValue('OCI_REGISTRY_HOST')}
+          modelUri={getFieldValue('OCI_MODEL_URI')}
+          setModelUri={memoizedSetModelUri}
+          isNewConnection
+        />
+      );
+    }
+    if (connectionType === ConnectionTypeRefs.S3) {
+      return (
+        <S3ConnectionField
+          folderPath={getFieldValue('AWS_S3_FOLDER_PATH')}
+          setFolderPath={memoizedSetModelPath}
+        />
+      );
+    }
+    return null;
+  };
   return (
     <>
       {fieldGroups?.map((fieldGroup, i) =>
         fieldGroup.section ? (
           <SectionFormField field={fieldGroup.section} key={i} data-testid="fields-section">
             {renderDataFields(fieldGroup.fields)}
+            {renderAdditionalFields()}
           </SectionFormField>
         ) : (
-          <React.Fragment key={i}>{renderDataFields(fieldGroup.fields)}</React.Fragment>
+          <React.Fragment key={i}>
+            {renderDataFields(fieldGroup.fields)}
+            {renderAdditionalFields()}
+          </React.Fragment>
         ),
       )}
     </>

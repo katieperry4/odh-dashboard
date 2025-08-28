@@ -62,7 +62,6 @@ type ModelLocationSelectFieldProps = {
   project: ProjectKind | null;
   setModelLocationData?: (data: ModelLocationData | undefined) => void;
   resetModelLocationData?: () => void;
-  //modelLocationData?: ModelLocationData;
 };
 export const ModelLocationSelectField: React.FC<ModelLocationSelectFieldProps> = ({
   modelLocation,
@@ -72,7 +71,6 @@ export const ModelLocationSelectField: React.FC<ModelLocationSelectFieldProps> =
   project,
   setModelLocationData,
   resetModelLocationData,
-  //modelLocationData,
 }) => {
   const [fetchedConnections] = useServingConnections(project?.metadata.name ?? '');
   const { connections } = useLabeledConnections(undefined, fetchedConnections);
@@ -138,7 +136,6 @@ export const ModelLocationSelectField: React.FC<ModelLocationSelectFieldProps> =
           setSelectedConnection={setSelectedConnection}
           selectedConnectionType={selectedConnectionType}
           setModelLocationData={setModelLocationData}
-          //modelLocationData={modelLocationData}
         />
       )}
     </FormGroup>

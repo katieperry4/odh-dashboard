@@ -42,8 +42,7 @@ export const ExistingConnectionField: React.FC<ExistingConnectionFieldProps> = (
   setModelLocationData,
   resetModelLocationData,
 }) => {
-  console.log('setModelLocationData', setModelLocationData);
-  console.log('resetModelLocationData', resetModelLocationData);
+  console.log(setModelLocationData, resetModelLocationData);
   const options: TypeaheadSelectOption[] = React.useMemo(
     () =>
       projectConnections.map((connection) => {

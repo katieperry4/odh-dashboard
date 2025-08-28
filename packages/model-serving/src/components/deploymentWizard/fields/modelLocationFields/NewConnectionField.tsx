@@ -1,4 +1,3 @@
-// NewConnectionField.tsx
 import * as React from 'react';
 import { ConnectionTypeConfigMapObj } from '@odh-dashboard/internal/concepts/connectionTypes/types';
 import { ModelLocationType, ModelLocationData } from './types';
@@ -9,14 +8,12 @@ type NewConnectionFieldProps = {
   modelLocationType: (typeof ModelLocationType)[keyof typeof ModelLocationType];
   connectionTypes: ConnectionTypeConfigMapObj[];
   setModelLocationData?: (data: ModelLocationData | undefined) => void;
-  //modelLocationData?: ModelLocationData;
 };
 
 export const NewConnectionField: React.FC<NewConnectionFieldProps> = ({
   modelLocationType,
   connectionTypes,
   setModelLocationData,
-  //modelLocationData,
 }) => {
   // Map location type to connection type
   const getConnectionType = (locationType: ModelLocationFieldData) => {
@@ -42,12 +39,13 @@ export const NewConnectionField: React.FC<NewConnectionFieldProps> = ({
 
   // Just render the form fields directly
   return (
-    <ModelLocationFormFields
-      fields={connectionType.data?.fields}
-      isPreview={false}
-      //modelLocationData={modelLocationData}
-      setModelLocationData={setModelLocationData}
-      connectionType={connectionType.metadata.name}
-    />
+    <>
+      <ModelLocationFormFields
+        fields={connectionType.data?.fields}
+        isPreview={false}
+        setModelLocationData={setModelLocationData}
+        connectionType={connectionType.metadata.name}
+      />
+    </>
   );
 };

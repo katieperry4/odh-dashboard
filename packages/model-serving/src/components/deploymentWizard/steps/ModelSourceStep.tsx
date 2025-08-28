@@ -29,7 +29,6 @@ export const ModelSourceStepContent: React.FC<ModelSourceStepProps> = ({
   validation,
   project,
 }) => {
-  console.log('wizardState', wizardState.data);
   return (
     <Form>
       <ModelLocationSelectField

@@ -17,6 +17,8 @@ export enum ModelLocationType {
 export type ModelLocation = {
   name?: string;
   description?: string;
+  modelPath?: string;
+  modelUri?: string;
 };
 
 export type ExistingModelLocation = ModelLocation & {
@@ -29,7 +31,7 @@ export type ExistingModelLocation = ModelLocation & {
 
 export type OCIModelLocation = ModelLocation & {
   type: ModelLocationType.OCI;
-  accessType?: string;
+  accessType?: string[];
   secretDetails: string;
   registryHost: string;
   modelUri: string;
@@ -41,7 +43,7 @@ export type S3ModelLocation = ModelLocation & {
   secretKey: string;
   endpoint: string;
   region?: string;
-  bucket: string;
+  bucket?: string;
   path: string;
 };
 
@@ -61,3 +63,17 @@ export type ModelLocationData =
   | S3ModelLocation
   | PVCModelLocation
   | URIModelLocation;
+
+export const isOCIModelLocation = (data?: ModelLocationData): data is OCIModelLocation => {
+  return data?.type === ModelLocationType.OCI;
+};
+
+export const isS3ModelLocation = (data?: ModelLocationData): data is S3ModelLocation => {
+  return data?.type === ModelLocationType.S3;
+};
+
+export const isExistingModelLocation = (
+  data?: ModelLocationData,
+): data is ExistingModelLocation => {
+  return data?.type === 'existing';
+};

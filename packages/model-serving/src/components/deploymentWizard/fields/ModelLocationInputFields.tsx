@@ -37,7 +37,6 @@ type ModelLocationInputFieldsProps = {
   setSelectedConnection: (connection: Connection) => void;
   selectedConnectionType: ConnectionTypeConfigMapObj | undefined;
   setModelLocationData?: (data: ModelLocationData | undefined) => void;
-  //modelLocationData?: ModelLocationData;
   resetModelLocationData?: () => void;
 };
 
@@ -50,7 +49,6 @@ export const ModelLocationInputFields: React.FC<ModelLocationInputFieldsProps> =
   selectedConnectionType,
   setModelLocationData,
   resetModelLocationData,
-  //modelLocationData,
 }) => {
   if (modelLocation === ModelLocationType.EXISTING) {
     return (
@@ -82,7 +80,6 @@ export const ModelLocationInputFields: React.FC<ModelLocationInputFieldsProps> =
           modelLocationType={ModelLocationType.URI}
           connectionTypes={connectionTypes}
           setModelLocationData={setModelLocationData}
-          //modelLocationData={modelLocationData}
         />
       );
     }
@@ -98,7 +95,6 @@ export const ModelLocationInputFields: React.FC<ModelLocationInputFieldsProps> =
           modelLocationType={ModelLocationType.OCI}
           connectionTypes={connectionTypes}
           setModelLocationData={setModelLocationData}
-          //modelLocationData={modelLocationData}
         />
       );
     }
@@ -133,7 +129,6 @@ export const ModelLocationInputFields: React.FC<ModelLocationInputFieldsProps> =
           modelLocationType={ModelLocationType.S3}
           connectionTypes={connectionTypes}
           setModelLocationData={setModelLocationData}
-          //modelLocationData={modelLocationData}
         />
       );
     }
