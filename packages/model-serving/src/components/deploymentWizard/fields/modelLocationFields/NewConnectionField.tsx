@@ -17,8 +17,6 @@ export const NewConnectionField: React.FC<NewConnectionFieldProps> = ({
   setModelLocationData,
   modelLocationData,
 }) => {
-  console.log('MODEL LOCATION DATA :', modelLocationData);
-
   const getConnectionType = (locationType: ModelLocationFieldData) => {
     switch (locationType) {
       case ModelLocationType.S3:

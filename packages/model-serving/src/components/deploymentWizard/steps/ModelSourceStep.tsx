@@ -9,12 +9,24 @@ import {
   ModelLocationSelectField,
   modelLocationSelectFieldSchema,
 } from '../fields/ModelLocationSelectField';
+import { isValidModelLocationData } from '../fields/ModelLocationInputFields';
 
 // Schema
-export const modelSourceStepSchema = z.object({
-  modelType: modelTypeSelectFieldSchema,
-  modelLocation: modelLocationSelectFieldSchema,
-});
+export const modelSourceStepSchema = z
+  .object({
+    modelType: modelTypeSelectFieldSchema,
+    modelLocation: modelLocationSelectFieldSchema,
+    modelLocationData: z.any(),
+  })
+  .refine(
+    (data) => {
+      return isValidModelLocationData(data.modelLocation, data.modelLocationData);
+    },
+    {
+      message: 'Invalid model location data for selected type',
+      path: ['modelLocationData'],
+    },
+  );
 
 export type ModelSourceStepData = z.infer<typeof modelSourceStepSchema>;
 
@@ -34,8 +46,8 @@ export const ModelSourceStepContent: React.FC<ModelSourceStepProps> = ({
       <ModelLocationSelectField
         modelLocation={wizardState.data.modelLocationField}
         setModelLocation={wizardState.handlers.setModelLocation}
-        validationProps={validation.getFieldValidationProps(['modelLocation'])}
-        validationIssues={validation.getFieldValidation(['modelLocation'])}
+        validationProps={validation.getFieldValidationProps(['modelLocation', 'modelLocationData'])}
+        validationIssues={validation.getFieldValidation(['modelLocation', 'modelLocationData'])}
         project={project}
         setModelLocationData={wizardState.handlers.setModelLocationData}
         resetModelLocationData={wizardState.handlers.resetModelLocationData}

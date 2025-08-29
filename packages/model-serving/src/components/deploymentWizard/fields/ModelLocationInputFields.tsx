@@ -9,11 +9,13 @@ import {
   isModelServingCompatible,
   ModelServingCompatibleTypes,
 } from '@odh-dashboard/internal/concepts/connectionTypes/utils';
+import z from 'zod';
 import { OCIAlert } from './modelLocationFields/OCIAlert';
 import { ExistingConnectionField } from './modelLocationFields/ExistingConnectionField';
 import { ModelLocationFieldData } from './ModelLocationSelectField';
 import {
   ConnectionTypeRefs,
+  isExistingModelLocation,
   ModelLocationData,
   ModelLocationType,
 } from './modelLocationFields/types';
@@ -27,6 +29,54 @@ export const useModelLocationData = (
   );
   return [modelLocationData, setModelLocationData];
 };
+
+export const isValidModelLocationData = (
+  modelLocation: ModelLocationFieldData,
+  modelLocationData?: ModelLocationData,
+): boolean => {
+  if (!modelLocationData) return false;
+
+  switch (modelLocation) {
+    case ModelLocationType.EXISTING:
+      return (
+        isExistingModelLocation(modelLocationData) &&
+        !!modelLocationData.connection &&
+        (!!modelLocationData.modelUri || !!modelLocationData.modelPath)
+      );
+
+    case ModelLocationType.URI:
+      return modelLocationData.type === ModelLocationType.URI && !!modelLocationData.uri;
+
+    case ModelLocationType.OCI:
+      return (
+        modelLocationData.type === ModelLocationType.OCI &&
+        !!modelLocationData.secretDetails &&
+        !!modelLocationData.registryHost &&
+        !!modelLocationData.uri
+      );
+
+    case ModelLocationType.S3:
+      return (
+        modelLocationData.type === ModelLocationType.S3 &&
+        !!modelLocationData.accessKey &&
+        !!modelLocationData.secretKey &&
+        !!modelLocationData.endpoint &&
+        !!modelLocationData.path
+      );
+
+    case ModelLocationType.PVC:
+      return modelLocationData.type === ModelLocationType.PVC && !!modelLocationData.storageUri;
+
+    default:
+      return false;
+  }
+};
+
+export const modelLocationDataSchema = z.object({
+  modelLocationData: z.custom<ModelLocationData>((val) => {
+    return isValidModelLocationData(val.modelLocation, val.modelLocationData);
+  }),
+});
 
 type ModelLocationInputFieldsProps = {
   modelLocation: ModelLocationFieldData;

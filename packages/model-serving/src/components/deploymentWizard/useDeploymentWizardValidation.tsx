@@ -17,8 +17,9 @@ export const useModelDeploymentWizardValidation = (
     () => ({
       modelType: data.modelTypeField,
       modelLocation: data.modelLocationField,
+      modelLocationData: data.modelLocationData,
     }),
-    [data.modelTypeField, data.modelLocationField],
+    [data.modelTypeField, data.modelLocationField, data.modelLocationData],
   );
 
   const modelSourceStepValidation = useZodFormValidation(
