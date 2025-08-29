@@ -20,6 +20,7 @@ type Props = {
   isPreview?: boolean;
   setModelLocationData?: (data: ModelLocationData | undefined) => void;
   connectionType: string;
+  modelLocationData?: ModelLocationData;
 };
 
 type FieldGroup = {
@@ -32,15 +33,53 @@ const ConnectionTypeFormFields: React.FC<Props> = ({
   isPreview,
   setModelLocationData,
   connectionType,
+  modelLocationData,
 }) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [fieldValues, setFieldValues] = React.useState<Record<string, any>>({});
+  const [fieldValues, setFieldValues] = React.useState<Record<string, any>>(() => {
+    if (!modelLocationData) {
+      return {};
+    }
+    switch (modelLocationData.type) {
+      case ModelLocationType.URI:
+        return { URI: modelLocationData.uri };
+      case ModelLocationType.S3:
+        return {
+          AWS_ACCESS_KEY_ID: modelLocationData.accessKey,
+          AWS_SECRET_ACCESS_KEY: modelLocationData.secretKey,
+          AWS_S3_ENDPOINT: modelLocationData.endpoint,
+          AWS_DEFAULT_REGION: modelLocationData.region,
+          AWS_S3_BUCKET: modelLocationData.bucket,
+          AWS_S3_FOLDER_PATH: modelLocationData.path,
+        };
+      case ModelLocationType.OCI:
+        return {
+          [OCIConnectionTypeKeys[0]]: modelLocationData.secretDetails,
+          OCI_HOST: modelLocationData.registryHost,
+          OCI_MODEL_URI: modelLocationData.uri,
+          ACCESS_TYPE: (() => {
+            try {
+              if (Array.isArray(modelLocationData.accessType)) {
+                return modelLocationData.accessType;
+              }
+              if (typeof modelLocationData.accessType === 'string') {
+                return JSON.parse(modelLocationData.accessType);
+              }
+              return [];
+            } catch {
+              return [];
+            }
+          })(),
+        };
+      default:
+        return {};
+    }
+  });
 
   const handleFieldChange = (field: ConnectionTypeDataField, value: ConnectionTypeValueType) => {
     setFieldValues((prev) => {
       const newFieldValues = { ...prev, [field.envVar]: value };
 
-      // Map to typed structure with the updated values
       const typedData = mapFieldValuesToLocationData(newFieldValues, connectionType);
 
       setModelLocationData?.(typedData);
@@ -75,7 +114,8 @@ const ConnectionTypeFormFields: React.FC<Props> = ({
           type: ModelLocationType.OCI,
           secretDetails: String(values[OCIConnectionTypeKeys[0]] || ''),
           registryHost: String(values.OCI_HOST || ''),
-          modelUri: String(values.OCI_MODEL_URI || ''),
+          uri: String(values.OCI_MODEL_URI || ''),
+          accessType: values.ACCESS_TYPE || '[]',
         };
       default:
         return {

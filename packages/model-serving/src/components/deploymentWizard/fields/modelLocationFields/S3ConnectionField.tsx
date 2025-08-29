@@ -19,7 +19,7 @@ type ConnectionFolderPathFieldProps = {
   setFolderPath: (folderPath: string) => void;
 };
 
-const ConnectionS3FolderPathField: React.FC<ConnectionFolderPathFieldProps> = ({
+const S3ConnectionField: React.FC<ConnectionFolderPathFieldProps> = ({
   folderPath,
   setFolderPath,
 }) => {
@@ -80,4 +80,4 @@ const ConnectionS3FolderPathField: React.FC<ConnectionFolderPathFieldProps> = ({
   );
 };
 
-export default ConnectionS3FolderPathField;
+export default S3ConnectionField;

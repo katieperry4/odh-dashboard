@@ -8,14 +8,17 @@ type NewConnectionFieldProps = {
   modelLocationType: (typeof ModelLocationType)[keyof typeof ModelLocationType];
   connectionTypes: ConnectionTypeConfigMapObj[];
   setModelLocationData?: (data: ModelLocationData | undefined) => void;
+  modelLocationData?: ModelLocationData;
 };
 
 export const NewConnectionField: React.FC<NewConnectionFieldProps> = ({
   modelLocationType,
   connectionTypes,
   setModelLocationData,
+  modelLocationData,
 }) => {
-  // Map location type to connection type
+  console.log('MODEL LOCATION DATA :', modelLocationData);
+
   const getConnectionType = (locationType: ModelLocationFieldData) => {
     switch (locationType) {
       case ModelLocationType.S3:
@@ -37,7 +40,6 @@ export const NewConnectionField: React.FC<NewConnectionFieldProps> = ({
     return <div>Connection type not found for {modelLocationType}</div>;
   }
 
-  // Just render the form fields directly
   return (
     <>
       <ModelLocationFormFields
@@ -45,6 +47,7 @@ export const NewConnectionField: React.FC<NewConnectionFieldProps> = ({
         isPreview={false}
         setModelLocationData={setModelLocationData}
         connectionType={connectionType.metadata.name}
+        modelLocationData={modelLocationData}
       />
     </>
   );

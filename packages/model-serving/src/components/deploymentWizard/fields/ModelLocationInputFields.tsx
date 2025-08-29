@@ -19,7 +19,6 @@ import {
 } from './modelLocationFields/types';
 import { NewConnectionField } from './modelLocationFields/NewConnectionField';
 
-// In ModelLocationInputFields.tsx, change the hook return type:
 export const useModelLocationData = (
   existingData?: ModelLocationData,
 ): [ModelLocationData | undefined, (data: ModelLocationData | undefined) => void] => {
@@ -83,11 +82,11 @@ export const ModelLocationInputFields: React.FC<ModelLocationInputFieldsProps> =
           modelLocationType={ModelLocationType.URI}
           connectionTypes={connectionTypes}
           setModelLocationData={setModelLocationData}
+          modelLocationData={modelLocationData}
         />
       );
     }
   }
-  // Make a new OCI connection
   if (modelLocation === ModelLocationType.OCI) {
     const ociConnectionType = connectionTypes.find(
       (ct) => ct.metadata.name === ConnectionTypeRefs.OCI,
@@ -98,11 +97,11 @@ export const ModelLocationInputFields: React.FC<ModelLocationInputFieldsProps> =
           modelLocationType={ModelLocationType.OCI}
           connectionTypes={connectionTypes}
           setModelLocationData={setModelLocationData}
+          modelLocationData={modelLocationData}
         />
       );
     }
   }
-  // Select a PVC to connect to
   if (modelLocation === ModelLocationType.PVC) {
     return (
       <div>
@@ -132,6 +131,7 @@ export const ModelLocationInputFields: React.FC<ModelLocationInputFieldsProps> =
           modelLocationType={ModelLocationType.S3}
           connectionTypes={connectionTypes}
           setModelLocationData={setModelLocationData}
+          modelLocationData={modelLocationData}
         />
       );
     }

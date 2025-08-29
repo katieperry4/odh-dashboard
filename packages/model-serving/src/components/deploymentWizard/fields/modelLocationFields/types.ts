@@ -1,5 +1,3 @@
-import { LabeledConnection } from '@odh-dashboard/internal/pages/modelServing/screens/types.js';
-
 export enum ConnectionTypeRefs {
   S3 = 's3',
   URI = 'uri-v1',
@@ -23,7 +21,7 @@ export type ModelLocation = {
 
 export type ExistingModelLocation = ModelLocation & {
   type: 'existing';
-  connection: LabeledConnection;
+  connection: string;
   connectionType: ConnectionTypeRefs;
   modelPath?: string; // For S3
   modelUri?: string; // For OCI/URI
@@ -34,7 +32,7 @@ export type OCIModelLocation = ModelLocation & {
   accessType?: string[];
   secretDetails: string;
   registryHost: string;
-  modelUri: string;
+  uri: string;
 };
 
 export type S3ModelLocation = ModelLocation & {

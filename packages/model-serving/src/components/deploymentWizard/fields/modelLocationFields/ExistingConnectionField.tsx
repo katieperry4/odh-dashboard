@@ -20,7 +20,12 @@ import {
 } from '@odh-dashboard/internal/concepts/connectionTypes/types';
 import S3ConnectionField from './S3ConnectionField';
 import OCIConnectionField from './OCIConnectionField';
-import { ConnectionTypeRefs, ModelLocationData, ModelLocationType } from './types';
+import {
+  ConnectionTypeRefs,
+  isExistingModelLocation,
+  ModelLocationData,
+  ModelLocationType,
+} from './types';
 
 type ExistingConnectionFieldProps = {
   children: React.ReactNode;
@@ -100,7 +105,6 @@ export const ExistingConnectionField: React.FC<ExistingConnectionFieldProps> = (
             selectOptions={options}
             onSelect={(_, value) => {
               if (modelLocationData) {
-                console.log('resetModelLocationData');
                 resetModelLocationData();
               }
 
@@ -114,28 +118,27 @@ export const ExistingConnectionField: React.FC<ExistingConnectionFieldProps> = (
               );
               if (newConnectionType?.metadata.name === ConnectionTypeRefs.S3) {
                 setModelLocationData?.({
-                  type: ModelLocationType.S3,
-                  accessKey: newConnection.data?.AWS_ACCESS_KEY_ID ?? '',
-                  secretKey: newConnection.data?.AWS_SECRET_ACCESS_KEY ?? '',
-                  endpoint: newConnection.data?.AWS_S3_ENDPOINT ?? '',
-                  region: newConnection.data?.AWS_DEFAULT_REGION ?? '',
-                  bucket: newConnection.data?.AWS_S3_BUCKET ?? '',
-                  path: newConnection.data?.AWS_S3_FOLDER_PATH ?? '',
+                  type: ModelLocationType.EXISTING,
+                  connection: getResourceNameFromK8sResource(newConnection),
+                  connectionType: newConnectionType.metadata.name,
+                  modelPath: newConnection.data?.AWS_S3_FOLDER_PATH ?? '',
                 });
               }
               if (newConnectionType?.metadata.name === ConnectionTypeRefs.OCI) {
                 setModelLocationData?.({
-                  type: ModelLocationType.OCI,
-                  secretDetails: newConnection.data?.OCI_SECRET_DETAILS ?? '',
-                  registryHost: newConnection.data?.OCI_HOST ?? '',
+                  type: ModelLocationType.EXISTING,
+                  connection: getResourceNameFromK8sResource(newConnection),
+                  connectionType: newConnectionType.metadata.name,
                   modelUri: newConnection.data?.OCI_MODEL_URI ?? '',
                 });
               }
               if (newConnectionType?.metadata.name === ConnectionTypeRefs.URI) {
-                console.log('setting model uri');
                 setModelLocationData?.({
-                  type: ModelLocationType.URI,
-                  uri: newConnection.data?.URI ?? '',
+                  type: ModelLocationType.EXISTING,
+                  connection: getResourceNameFromK8sResource(newConnection),
+                  connectionType: newConnectionType.metadata.name,
+                  // Decode the URI
+                  modelUri: window.atob(newConnection.data?.URI ?? ''),
                 });
               }
             }}
@@ -153,15 +156,25 @@ export const ExistingConnectionField: React.FC<ExistingConnectionFieldProps> = (
       {children}
       {selectedConnectionType?.metadata.name === ConnectionTypeRefs.S3 && (
         <S3ConnectionField
-          folderPath="testing" // TODO: Implement
-          setFolderPath={() => console.log('setting folder path')} // TODO: Implement
+          folderPath={
+            isExistingModelLocation(modelLocationData) ? modelLocationData.modelPath ?? '' : ''
+          }
+          setFolderPath={(path) => {
+            if (isExistingModelLocation(modelLocationData) && setModelLocationData) {
+              setModelLocationData({ ...modelLocationData, modelPath: path });
+            }
+          }}
         />
       )}
       {selectedConnectionType?.metadata.name === ConnectionTypeRefs.OCI && (
         <OCIConnectionField
           ociHost={window.atob(selectedConnection?.data?.OCI_HOST ?? '')}
-          modelUri="testing" // TODO: Implement
-          setModelUri={() => console.log('setting model uri')} // TODO: Implement
+          modelUri={isExistingModelLocation(modelLocationData) ? modelLocationData.modelUri : ''}
+          setModelUri={(uri) => {
+            if (isExistingModelLocation(modelLocationData) && setModelLocationData) {
+              setModelLocationData({ ...modelLocationData, modelUri: uri ?? '' });
+            }
+          }}
         />
       )}
     </FormGroup>

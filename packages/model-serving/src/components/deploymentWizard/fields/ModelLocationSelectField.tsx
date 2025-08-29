@@ -12,7 +12,11 @@ import { getConnectionTypeRef } from '@odh-dashboard/internal/concepts/connectio
 import { getResourceNameFromK8sResource } from '@odh-dashboard/internal/concepts/k8s/utils';
 import { useWatchConnectionTypes } from '@odh-dashboard/internal/utilities/useWatchConnectionTypes';
 import { ModelLocationInputFields } from './ModelLocationInputFields';
-import { ModelLocationData, ModelLocationType } from './modelLocationFields/types';
+import {
+  isExistingModelLocation,
+  ModelLocationData,
+  ModelLocationType,
+} from './modelLocationFields/types';
 
 // Schema
 export const modelLocationSelectFieldSchema = z.enum(
@@ -76,15 +80,33 @@ export const ModelLocationSelectField: React.FC<ModelLocationSelectFieldProps> =
 }) => {
   const [fetchedConnections] = useServingConnections(project?.metadata.name ?? '');
   const { connections } = useLabeledConnections(undefined, fetchedConnections);
-  const [selectedConnection, setSelectedConnection] = React.useState<Connection | undefined>(
+  const selectedConnection = React.useMemo(
+    () =>
+      modelLocation === ModelLocationType.EXISTING && isExistingModelLocation(modelLocationData)
+        ? connections.find(
+            (c) => getResourceNameFromK8sResource(c.connection) === modelLocationData.connection,
+          )
+        : undefined,
+    [connections, modelLocation, modelLocationData],
+  );
+
+  const [selectedConnectionState, setSelectedConnection] = React.useState<Connection | undefined>(
     undefined,
   );
+
+  React.useEffect(() => {
+    if (selectedConnection && !selectedConnectionState) {
+      setSelectedConnection(selectedConnection.connection);
+    }
+  }, [selectedConnection, selectedConnectionState, setSelectedConnection]);
   const [modelServingConnectionTypes] = useWatchConnectionTypes(true);
 
   const selectedConnectionType = React.useMemo(
     () =>
       modelServingConnectionTypes.find(
-        (t) => getResourceNameFromK8sResource(t) === getConnectionTypeRef(selectedConnection),
+        (t) =>
+          getResourceNameFromK8sResource(t) ===
+          getConnectionTypeRef(selectedConnection?.connection),
       ),
     [modelServingConnectionTypes, selectedConnection],
   );
@@ -134,7 +156,7 @@ export const ModelLocationSelectField: React.FC<ModelLocationSelectFieldProps> =
           modelLocation={modelLocation}
           connections={connections}
           connectionTypes={modelServingConnectionTypes}
-          selectedConnection={selectedConnection}
+          selectedConnection={selectedConnection?.connection}
           setSelectedConnection={setSelectedConnection}
           selectedConnectionType={selectedConnectionType}
           setModelLocationData={setModelLocationData}

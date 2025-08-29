@@ -34,7 +34,7 @@ const ModelDeploymentWizard: React.FC<ModelDeploymentWizardProps> = ({
 
   const wizardState = useModelDeploymentWizard(existingData);
   const validation = useModelDeploymentWizardValidation(wizardState.data);
-  console.log('location data', wizardState.data.modelLocationData);
+  //console.log('location data', wizardState.data);
 
   return (
     <ApplicationsPage title={title} description={description} loaded empty={false}>
