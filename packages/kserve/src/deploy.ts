@@ -8,16 +8,23 @@ import { applyK8sAPIOptions } from '@odh-dashboard/internal/api/apiMergeUtils';
 import { k8sCreateResource } from '@openshift/dynamic-plugin-sdk-utils';
 import { HardwareProfileConfig } from '@odh-dashboard/internal/concepts/hardwareProfiles/useHardwareProfileConfig';
 import { ServingRuntimeModelType } from '@odh-dashboard/internal/types';
+import {
+  isModelServingCompatible,
+  ModelServingCompatibleTypes,
+} from '@odh-dashboard/internal/concepts/connectionTypes/utils';
+import { isPVCUri } from '@odh-dashboard/internal/pages/modelServing/screens/projects/utils';
 import { KServeDeployment } from './deployments';
 import { UseModelDeploymentWizardState } from '../../model-serving/src/components/deploymentWizard/useDeploymentWizard';
 import { ExternalRouteFieldData } from '../../model-serving/src/components/deploymentWizard/fields/ExternalRouteField';
 import { TokenAuthenticationFieldData } from '../../model-serving/src/components/deploymentWizard/fields/TokenAuthenticationField';
 import { NumReplicasFieldData } from '../../model-serving/src/components/deploymentWizard/fields/NumReplicasField';
+import { ModelLocationData } from '../../model-serving/src/components/deploymentWizard/fields/modelLocationFields/types';
 
 type CreatingInferenceServiceObject = {
   project: string;
   name: string;
   k8sName: string;
+  modelLocationData?: ModelLocationData;
   modelType: ServingRuntimeModelType;
   hardwareProfile: HardwareProfileConfig;
   modelFormat: SupportedModelFormats;
@@ -44,6 +51,7 @@ export const deployKServeDeployment = async (
     project: projectName,
     name: wizardData.k8sNameDesc.data.name,
     k8sName: wizardData.k8sNameDesc.data.k8sName.value,
+    modelLocationData: wizardData.modelLocationData.data,
     modelType: wizardData.modelType.data,
     hardwareProfile: wizardData.hardwareProfileConfig.formData,
     modelFormat: wizardData.modelFormatState.modelFormat,
@@ -72,6 +80,7 @@ const assembleInferenceService = (
     project,
     name,
     k8sName,
+    modelLocationData,
     modelType,
     hardwareProfile,
     modelFormat,
@@ -108,6 +117,49 @@ const assembleInferenceService = (
   const annotations = { ...inferenceService.metadata.annotations };
   annotations['openshift.io/display-name'] = name.trim();
   annotations['opendatahub.io/model-type'] = modelType;
+  if (modelLocationData?.connection) {
+    annotations['opendatahub.io/connections'] = modelLocationData.connection;
+  }
+  // Adds storage URI for PVC
+  if (isPVCUri(String(modelLocationData?.fieldValues.URI))) {
+    if (!inferenceService.spec.predictor.model) {
+      inferenceService.spec.predictor.model = {};
+    }
+    inferenceService.spec.predictor.model.storageUri = String(modelLocationData?.fieldValues.URI);
+  }
+  // Handle additional fields based on connection type
+  if (modelLocationData?.connectionTypeObject) {
+    if (
+      isModelServingCompatible(
+        modelLocationData.connectionTypeObject,
+        ModelServingCompatibleTypes.S3ObjectStorage,
+      )
+    ) {
+      // For S3, add storage path
+      if (!inferenceService.spec.predictor.model) {
+        inferenceService.spec.predictor.model = {};
+      }
+      inferenceService.spec.predictor.model.storage = {
+        path: modelLocationData.additionalFields.modelPath,
+      };
+    } else if (
+      isModelServingCompatible(
+        modelLocationData.connectionTypeObject,
+        ModelServingCompatibleTypes.OCI,
+      ) ||
+      isModelServingCompatible(
+        modelLocationData.connectionTypeObject,
+        ModelServingCompatibleTypes.URI,
+      )
+    ) {
+      // For OCI and URI, add storage URI
+      if (!inferenceService.spec.predictor.model) {
+        inferenceService.spec.predictor.model = {};
+      }
+      inferenceService.spec.predictor.model.storageUri =
+        modelLocationData.additionalFields.modelUri ?? String(modelLocationData.fieldValues.URI);
+    }
+  }
   const isLegacyHardwareProfile = !hardwareProfile.selectedProfile?.metadata.uid;
   if (!isLegacyHardwareProfile) {
     annotations['opendatahub.io/hardware-profile-name'] =
