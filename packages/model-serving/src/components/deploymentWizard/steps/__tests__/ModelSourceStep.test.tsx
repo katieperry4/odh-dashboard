@@ -11,6 +11,7 @@ import { modelTypeSelectFieldSchema } from '../../fields/ModelTypeSelectField';
 import type { UseModelDeploymentWizardState } from '../../useDeploymentWizard';
 import { isValidModelLocationData } from '../../fields/ModelLocationInputFields';
 import { ModelLocationData, ModelLocationType } from '../../fields/modelLocationFields/types';
+import { createConnectionDataSchema } from '../../fields/CreateConnectionInputFields';
 
 const modelSourceStepSchema = z.object({
   modelType: modelTypeSelectFieldSchema,
@@ -18,6 +19,7 @@ const modelSourceStepSchema = z.object({
     if (!val) return false;
     return isValidModelLocationData(val.type, val);
   }),
+  createConnectionData: createConnectionDataSchema,
 });
 
 type ModelSourceStepData = z.infer<typeof modelSourceStepSchema>;
@@ -50,6 +52,14 @@ const mockDeploymentWizardState = (
           project: null,
           setSelectedConnection: jest.fn(),
           selectedConnection: undefined,
+        },
+        createConnectionData: {
+          data: {
+            saveConnection: true,
+            nameDesc: mockK8sNameDescriptionFieldData(),
+          },
+          setData: jest.fn(),
+          project: null,
         },
         k8sNameDesc: {
           data: mockK8sNameDescriptionFieldData(),
@@ -148,6 +158,10 @@ describe('ModelSourceStep', () => {
             pvcConnection: 'test',
           },
         },
+        createConnectionData: {
+          saveConnection: true,
+          nameDesc: mockK8sNameDescriptionFieldData(),
+        },
       };
       const result = modelSourceStepSchema.safeParse(validData);
       expect(result.success).toBe(true);
@@ -164,7 +178,17 @@ describe('ModelSourceStep', () => {
     it('should render ModelTypeSelectField and ModelLocationSelectField', () => {
       render(
         <ModelSourceStepContent
-          wizardState={mockDeploymentWizardState()}
+          wizardState={mockDeploymentWizardState({
+            state: {
+              modelLocationData: {
+                data: {
+                  type: ModelLocationType.NEW,
+                  fieldValues: { URI: 'uri://test' },
+                  additionalFields: {},
+                },
+              },
+            },
+          })}
           validation={mockValidation}
           connections={[]}
           selectedConnection={undefined}
@@ -173,6 +197,8 @@ describe('ModelSourceStep', () => {
       );
       expect(screen.getByTestId('model-type-select')).toBeInTheDocument();
       expect(screen.getByTestId('model-location-select')).toBeInTheDocument();
+      expect(screen.getByTestId('save-connection-checkbox')).toBeInTheDocument();
+      expect(screen.getByTestId('save-connection-checkbox')).toBeChecked();
     });
 
     it('should render with selected model type and model location', () => {
@@ -217,6 +243,8 @@ describe('ModelSourceStep', () => {
       );
       expect(screen.getByText('Generative AI model (e.g. LLM)')).toBeInTheDocument();
       expect(screen.getByTestId('field URI')).toHaveValue('https://test');
+      expect(screen.getByTestId('save-connection-checkbox')).toBeInTheDocument();
+      expect(screen.getByTestId('save-connection-checkbox')).toBeChecked();
     });
   });
 });

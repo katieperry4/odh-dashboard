@@ -79,13 +79,14 @@ const hasConnectionAnnotation = (deployment: InferenceServiceKind): string | und
 const extractAdditionalFields = (deployment: InferenceServiceKind): Record<string, string> => {
   const additionalFields: Record<string, string> = {};
   const { predictor } = deployment.spec;
-  const connectionType = predictor.model?.storage?.key
-    ? ModelServingCompatibleTypes.S3ObjectStorage
-    : predictor.imagePullSecrets?.length
-    ? ModelServingCompatibleTypes.OCI
-    : predictor.model?.storageUri && !isPVCUri(predictor.model.storageUri)
-    ? ModelServingCompatibleTypes.URI
-    : undefined;
+  const connectionType =
+    predictor.model?.storage?.key || predictor.model?.storage?.path
+      ? ModelServingCompatibleTypes.S3ObjectStorage
+      : predictor.imagePullSecrets?.length
+      ? ModelServingCompatibleTypes.OCI
+      : predictor.model?.storageUri && !isPVCUri(predictor.model.storageUri)
+      ? ModelServingCompatibleTypes.URI
+      : undefined;
 
   if (connectionType === ModelServingCompatibleTypes.S3ObjectStorage) {
     additionalFields.modelPath = predictor.model?.storage?.path || '';

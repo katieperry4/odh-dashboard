@@ -15,6 +15,10 @@ import {
   useTokenAuthenticationField,
   type TokenAuthenticationFieldData,
 } from './fields/TokenAuthenticationField';
+import {
+  useCreateConnectionData,
+  type CreateConnectionData,
+} from './fields/CreateConnectionInputFields';
 
 export type ModelDeploymentWizardData = {
   modelTypeField?: ModelTypeFieldData;
@@ -24,6 +28,7 @@ export type ModelDeploymentWizardData = {
   hardwareProfile?: Parameters<typeof useHardwareProfileConfig>;
   modelFormat?: SupportedModelFormats;
   modelLocationData?: ModelLocationData;
+  createConnectionData?: CreateConnectionData;
   // Add more field handlers as needed
 };
 
@@ -35,6 +40,7 @@ export type UseModelDeploymentWizardState = {
     hardwareProfileConfig: ReturnType<typeof useHardwareProfileConfig>;
     modelFormatState: ReturnType<typeof useModelFormatField>;
     modelLocationData: ReturnType<typeof useModelLocationData>;
+    createConnectionData: ReturnType<typeof useCreateConnectionData>;
     externalRoute: ReturnType<typeof useExternalRouteField>;
     tokenAuthentication: ReturnType<typeof useTokenAuthenticationField>;
   };
@@ -51,6 +57,10 @@ export const useModelDeploymentWizard = (
   const modelLocationData = useModelLocationData(
     currentProject ?? null,
     initialData?.modelLocationData,
+  );
+  const createConnectionData = useCreateConnectionData(
+    currentProject ?? null,
+    initialData?.createConnectionData,
   );
 
   // Step 2: Model Deployment
@@ -77,6 +87,7 @@ export const useModelDeploymentWizard = (
       hardwareProfileConfig,
       modelFormatState,
       modelLocationData,
+      createConnectionData,
       externalRoute,
       tokenAuthentication,
     },

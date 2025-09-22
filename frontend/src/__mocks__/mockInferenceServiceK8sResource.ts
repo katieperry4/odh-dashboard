@@ -149,6 +149,7 @@ export const mockInferenceServiceK8sResource = ({
         'opendatahub.io/hardware-profile-namespace': hardwareProfileNamespace,
       }),
       ...(modelType && { 'opendatahub.io/model-type': modelType }),
+      ...(secretName && { 'opendatahub.io/connections': secretName }),
     },
     creationTimestamp,
     ...(deleted ? { deletionTimestamp: new Date().toUTCString() } : {}),
