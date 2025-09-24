@@ -46,10 +46,12 @@ const mockDeploymentWizardState = (
         modelLocationData: {
           data: undefined,
           setData: jest.fn(),
-          connections: [],
           project: null,
-          setSelectedConnection: jest.fn(),
+          connectionsLoaded: false,
+          connectionTypes: [],
           selectedConnection: undefined,
+          setSelectedConnection: jest.fn(),
+          connections: [],
         },
         k8sNameDesc: {
           data: mockK8sNameDescriptionFieldData(),
@@ -170,9 +172,6 @@ describe('ModelSourceStep', () => {
         <ModelSourceStepContent
           wizardState={mockDeploymentWizardState()}
           validation={mockValidation}
-          connections={[]}
-          selectedConnection={undefined}
-          setSelectedConnection={jest.fn()}
         />,
       );
       expect(screen.getByTestId('model-type-select')).toBeInTheDocument();
@@ -214,9 +213,6 @@ describe('ModelSourceStep', () => {
         <ModelSourceStepContent
           wizardState={wizardDataWithSelection}
           validation={mockValidation}
-          connections={[]}
-          selectedConnection={undefined}
-          setSelectedConnection={jest.fn()}
         />,
       );
       expect(screen.getByText('Generative AI model (e.g. LLM)')).toBeInTheDocument();
