@@ -18,6 +18,7 @@ import {
 import {
   HardwareProfileModel,
   InferenceServiceModel,
+  SecretModel,
   ProjectModel,
   ServingRuntimeModel,
   TemplateModel,
@@ -25,6 +26,7 @@ import {
 import { ServingRuntimeModelType, ServingRuntimePlatform } from '#~/types';
 import { mockGlobalScopedHardwareProfiles } from '#~/__mocks__/mockHardwareProfile';
 import { mockConnectionTypeConfigMap } from '../../../../../../__mocks__/mockConnectionType';
+import { mockURISecretK8sResource } from '../../../../../../__mocks__/mockSecretK8sResource';
 
 const initIntercepts = ({ modelType }: { modelType?: ServingRuntimeModelType }) => {
   cy.interceptOdh(
@@ -111,6 +113,18 @@ const initIntercepts = ({ modelType }: { modelType?: ServingRuntimeModelType }) 
   );
 
   cy.interceptK8sList(
+    { model: SecretModel, ns: 'test-project' },
+    mockK8sResourceList([
+      mockURISecretK8sResource({ namespace: 'test-project' }),
+      mockURISecretK8sResource({
+        namespace: 'test-project',
+        name: 'test-uri-secret-2',
+        displayName: 'Test URI Secret 2',
+      }),
+    ]),
+  );
+
+  cy.interceptK8sList(
     TemplateModel,
     mockK8sResourceList(
       [
@@ -173,9 +187,17 @@ const initIntercepts = ({ modelType }: { modelType?: ServingRuntimeModelType }) 
     },
     {
       statusCode: 200,
-      body: mockInferenceServiceK8sResource({ name: 'test-model', modelType }),
+      body: mockInferenceServiceK8sResource({
+        name: 'test-model',
+        modelType,
+      }),
     },
   ).as('createInferenceService');
+  cy.interceptK8s(
+    'GET',
+    { model: SecretModel, ns: 'test-project', name: 'test-uri-secret' },
+    mockURISecretK8sResource({}),
+  ).as('getExistingSecret');
 };
 
 describe('Model Serving Deploy Wizard', () => {
@@ -231,8 +253,14 @@ describe('Model Serving Deploy Wizard', () => {
       .should('exist')
       .click();
     modelServingWizard.findModelLocationSelect().should('exist');
-    modelServingWizard.findModelLocationSelectOption('URI - v1').should('exist').click();
-    modelServingWizard.findUrilocationInput().should('exist').type('https://test');
+    modelServingWizard.findModelLocationSelectOption('Existing connection').should('exist').click();
+    modelServingWizard.findExistingConnectionSelect().should('exist');
+    modelServingWizard
+      .findExistingConnectionSelectOption('Test URI Secret')
+      .should('exist')
+      .click();
+
+    modelServingWizard.findSaveConnectionCheckbox().should('not.exist');
     modelServingWizard.findNextButton().should('be.enabled').click();
 
     // Step 2: Model deployment
@@ -293,6 +321,8 @@ describe('Model Serving Deploy Wizard', () => {
 
     // Step 4: Summary
     modelServingWizard.findSubmitButton().should('be.enabled').click();
+
+    cy.wait('@getExistingSecret');
 
     // dry run request
     cy.wait('@createInferenceService').then((interception) => {
@@ -366,8 +396,14 @@ describe('Model Serving Deploy Wizard', () => {
     modelServingWizard.findModelTypeSelectOption('Generative AI model (e.g. LLM)').should('exist');
     modelServingWizard.findModelTypeSelectOption('Predictive model').should('exist').click();
     modelServingWizard.findModelLocationSelect().should('exist');
-    modelServingWizard.findModelLocationSelectOption('URI - v1').should('exist').click();
-    modelServingWizard.findUrilocationInput().should('exist').type('https://test');
+    modelServingWizard.findModelLocationSelectOption('Existing connection').should('exist').click();
+    modelServingWizard.findExistingConnectionSelect().should('exist');
+    modelServingWizard
+      .findExistingConnectionSelectOption('Test URI Secret')
+      .should('exist')
+      .click();
+    modelServingWizard.findExistingConnectionValue().should('have.value', 'Test URI Secret');
+    modelServingWizard.findSaveConnectionCheckbox().should('not.exist');
     modelServingWizard.findNextButton().should('be.enabled').click();
 
     // Step 2: Model deployment
@@ -404,6 +440,8 @@ describe('Model Serving Deploy Wizard', () => {
 
     // Step 4: Summary
     modelServingWizard.findSubmitButton().should('be.enabled').click();
+
+    cy.wait('@getExistingSecret');
 
     // dry run request
     cy.wait('@createInferenceService').then((interception) => {
@@ -463,6 +501,7 @@ describe('Model Serving Deploy Wizard', () => {
       mockK8sResourceList([
         mockInferenceServiceK8sResource({
           modelType: ServingRuntimeModelType.PREDICTIVE,
+          secretName: 'test-uri-secret',
           hardwareProfileName: 'large-profile',
           hardwareProfileNamespace: 'opendatahub',
           resources: {
@@ -475,7 +514,6 @@ describe('Model Serving Deploy Wizard', () => {
               memory: '16Gi',
             },
           },
-          storageUri: 'https://test',
         }),
       ]),
     );
@@ -490,7 +528,10 @@ describe('Model Serving Deploy Wizard', () => {
 
     // Step 1: Model source
     modelServingWizardEdit.findModelLocationSelect().should('exist');
-    modelServingWizardEdit.findUrilocationInput().should('have.value', 'https://test');
+    modelServingWizardEdit.findModelLocationSelectOption('Existing connection').should('exist');
+    modelServingWizardEdit.findExistingConnectionSelect().should('exist');
+    modelServingWizardEdit.findExistingConnectionValue().should('have.value', 'Test URI Secret');
+    modelServingWizardEdit.findSaveConnectionCheckbox().should('not.exist');
     modelServingWizardEdit.findModelSourceStep().should('be.enabled');
     modelServingWizardEdit.findNextButton().should('be.enabled');
 

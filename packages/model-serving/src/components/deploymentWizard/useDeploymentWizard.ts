@@ -6,6 +6,7 @@ import { useK8sNameDescriptionFieldData } from '@odh-dashboard/internal/concepts
 import { extractK8sNameDescriptionFieldData } from '@odh-dashboard/internal/concepts/k8s/K8sNameDescriptionField/utils';
 import type { SupportedModelFormats } from '@odh-dashboard/internal/k8sTypes';
 import { byName, ProjectsContext } from '@odh-dashboard/internal/concepts/projects/ProjectsContext';
+import { LabeledConnection } from '@odh-dashboard/internal/pages/modelServing/screens/types';
 import { useModelFormatField } from './fields/ModelFormatField';
 import { ModelLocationData } from './fields/modelLocationFields/types';
 import { useModelTypeField, type ModelTypeFieldData } from './fields/ModelTypeSelectField';
@@ -16,6 +17,10 @@ import {
   type TokenAuthenticationFieldData,
 } from './fields/TokenAuthenticationField';
 import { useNumReplicasField, type NumReplicasFieldData } from './fields/NumReplicasField';
+import {
+  useCreateConnectionData,
+  type CreateConnectionData,
+} from './fields/CreateConnectionInputFields';
 
 export type ModelDeploymentWizardData = {
   modelTypeField?: ModelTypeFieldData;
@@ -26,6 +31,9 @@ export type ModelDeploymentWizardData = {
   hardwareProfile?: Parameters<typeof useHardwareProfileConfig>;
   modelFormat?: SupportedModelFormats;
   modelLocationData?: ModelLocationData;
+  connections?: LabeledConnection[];
+  initSelectedConnection?: LabeledConnection | undefined;
+  createConnectionData?: CreateConnectionData;
   // Add more field handlers as needed
 };
 
@@ -37,6 +45,7 @@ export type UseModelDeploymentWizardState = {
     hardwareProfileConfig: ReturnType<typeof useHardwareProfileConfig>;
     modelFormatState: ReturnType<typeof useModelFormatField>;
     modelLocationData: ReturnType<typeof useModelLocationData>;
+    createConnectionData: ReturnType<typeof useCreateConnectionData>;
     externalRoute: ReturnType<typeof useExternalRouteField>;
     tokenAuthentication: ReturnType<typeof useTokenAuthenticationField>;
     numReplicas: ReturnType<typeof useNumReplicasField>;
@@ -54,6 +63,10 @@ export const useModelDeploymentWizard = (
   const modelLocationData = useModelLocationData(
     currentProject ?? null,
     initialData?.modelLocationData,
+  );
+  const createConnectionData = useCreateConnectionData(
+    currentProject ?? null,
+    initialData?.createConnectionData,
   );
 
   // Step 2: Model Deployment
@@ -82,6 +95,7 @@ export const useModelDeploymentWizard = (
       hardwareProfileConfig,
       modelFormatState,
       modelLocationData,
+      createConnectionData,
       externalRoute,
       tokenAuthentication,
       numReplicas,
