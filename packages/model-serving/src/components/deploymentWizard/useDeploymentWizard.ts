@@ -67,6 +67,7 @@ export const useModelDeploymentWizard = (
   const createConnectionData = useCreateConnectionData(
     currentProject ?? null,
     initialData?.createConnectionData,
+    modelLocationData.data,
   );
 
   // Step 2: Model Deployment

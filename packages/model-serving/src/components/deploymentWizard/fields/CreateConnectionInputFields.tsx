@@ -23,13 +23,31 @@ export type CreateConnectionDataField = {
 export const useCreateConnectionData = (
   project: ProjectKind | null,
   existingData?: CreateConnectionData,
+  modelLocationData?: ModelLocationData,
 ): CreateConnectionDataField => {
   const [createConnectionData, setCreateConnectionData] = React.useState<CreateConnectionData>(
     existingData ?? { saveConnection: true },
   );
 
+  const CCData = React.useMemo(() => {
+    if (
+      !modelLocationData?.type ||
+      modelLocationData.type === ModelLocationType.EXISTING ||
+      modelLocationData.type === ModelLocationType.PVC
+    ) {
+      return {
+        ...createConnectionData,
+        saveConnection: false,
+      };
+    }
+    return {
+      ...createConnectionData,
+      saveConnection: createConnectionData.saveConnection,
+    };
+  }, [modelLocationData?.type, createConnectionData]);
+
   return {
-    data: createConnectionData,
+    data: CCData,
     setData: setCreateConnectionData,
     project,
   };
@@ -72,18 +90,11 @@ export const CreateConnectionInputFields: React.FC<CreateConnectionInputFieldsPr
       modelLocationData.type === ModelLocationType.EXISTING ||
       modelLocationData.type === ModelLocationType.PVC
     ) {
-      setCreateConnectionData({
-        ...createConnectionData,
-        saveConnection: false,
-      });
       return false;
     }
-    setCreateConnectionData({
-      ...createConnectionData,
-      saveConnection: true,
-    });
     return true;
   }, [modelLocationData?.type]);
+
   const resetNameDesc = React.useCallback(
     (checked: boolean) => {
       setCreateConnectionData({

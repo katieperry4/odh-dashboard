@@ -252,11 +252,7 @@ const handleConnectionCreation = async (
   const { createConnectionData, modelLocationData, project } = data;
 
   // Don't do anything if the connection already exists
-  if (
-    modelLocationData?.type === ModelLocationType.EXISTING ||
-    modelLocationData?.type === ModelLocationType.PVC ||
-    !modelLocationData
-  ) {
+  if (modelLocationData?.type === ModelLocationType.EXISTING || !modelLocationData) {
     return;
   }
 
