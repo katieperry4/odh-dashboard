@@ -12,13 +12,13 @@ export const ModelCatalogDeployButton = ({
 }) => (
   <ModelCatalogDeployModalExtension
     model={model}
-    render={(buttonState, onOpenModal, isModalAvailable) => {
+    render={(buttonState, onDeployClick, isModalAvailable) => {
       const deployButton = (
         <Button
           id="deploy-button"
           aria-label="Deploy model"
           variant={ButtonVariant.primary}
-          onClick={buttonState?.enabled ? onOpenModal : undefined}
+          onClick={buttonState?.enabled ? onDeployClick : undefined}
           isAriaDisabled={!buttonState?.enabled}
           data-testid="deploy-button"
         >

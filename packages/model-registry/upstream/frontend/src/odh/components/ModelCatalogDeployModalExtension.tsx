@@ -5,7 +5,19 @@ import { isModelCatalogDeployModalExtension } from '~/odh/extension-points';
 import { CatalogModel, CatalogModelDetailsParams } from '~/app/modelCatalogTypes';
 import { getDeployButtonState } from '~/odh/utils';
 import { useCatalogModelArtifacts } from '~/app/hooks/modelCatalog/useCatalogModelArtifacts';
-import { decodeParams, getModelArtifactUri } from '~/app/pages/modelCatalog/utils/modelCatalogUtils';
+import {
+  decodeParams,
+  getModelArtifactUri,
+} from '~/app/pages/modelCatalog/utils/modelCatalogUtils';
+import {
+  InitialWizardFormData,
+  ModelLocationType,
+} from '@odh-dashboard/model-serving/types/form-data';
+import { extractExternalFormData } from '~/odh/extractExternalFormData';
+import {
+  isExternalFormDataExtension,
+  isNavigateToWizardExtension,
+} from '../extension-points/model-catalog-form-data';
 
 type ModelCatalogDeployModalExtensionProps = {
   model: CatalogModel;
@@ -20,21 +32,40 @@ const ModelCatalogDeployModalExtension: React.FC<ModelCatalogDeployModalExtensio
   model,
   render,
 }) => {
-  const navigate = useNavigate();
-  const [extensions, extensionsLoaded] = useResolvedExtensions(isModelCatalogDeployModalExtension);
-
-  const [openModal, setOpenModal] = React.useState(false);
-
+  const [navigateExtensions, navigateExtensionsLoaded] = useResolvedExtensions(
+    isNavigateToWizardExtension,
+  );
+  const [formDataExtensions, formDataExtensionsLoaded] = useResolvedExtensions(
+    isExternalFormDataExtension,
+  );
+  const [navigateToWizard, setNavigateToWizard] = React.useState<
+    ((initialData?: InitialWizardFormData, projectName?: string) => void) | null
+  >(null);
+  const [platformExtensions, platformExtensionsLoaded] = useResolvedExtensions(
+    isModelCatalogDeployModalExtension,
+  );
   const [availablePlatformIds, setAvailablePlatformIds] = React.useState<string[]>([]);
   const buttonState = getDeployButtonState(availablePlatformIds, true);
-
-  const onOpenModal = React.useCallback(() => {
-    setOpenModal(true);
-  }, [setOpenModal]);
-
+  // const isModalAvailable = React.useMemo(
+  //   () => extensionsLoaded && extensions.length > 0 && !!navigateToWizard,
+  //   [extensionsLoaded, extensions.length, navigateToWizard],
+  // );
   const isModalAvailable = React.useMemo(
-    () => extensionsLoaded && extensions.length > 0,
-    [extensionsLoaded, extensions],
+    () =>
+      navigateExtensionsLoaded &&
+      navigateExtensions.length > 0 &&
+      !!navigateToWizard &&
+      formDataExtensionsLoaded &&
+      formDataExtensions.length > 0 &&
+      artifactLoaded &&
+      !artifactsLoadError,
+    [
+      navigateExtensionsLoaded,
+      navigateExtensions.length,
+      navigateToWizard,
+      formDataExtensionsLoaded,
+      formDataExtensions.length,
+    ],
   );
 
   const params = useParams<CatalogModelDetailsParams>();
@@ -44,51 +75,73 @@ const ModelCatalogDeployModalExtension: React.FC<ModelCatalogDeployModalExtensio
     encodeURIComponent(`${decodedParams.modelName}`),
   );
   const uri = artifacts.items.length > 0 ? getModelArtifactUri(artifacts.items) : '';
-  const loaded = isModalAvailable && artifactLoaded && !artifactsLoadError;
 
+  // Extract form data using extension
+  const wizardInitialData = React.useMemo((): InitialWizardFormData | undefined => {
+    if (
+      !formDataExtensionsLoaded ||
+      formDataExtensions.length === 0 ||
+      !uri ||
+      !artifactLoaded ||
+      artifactsLoadError
+    ) {
+      return undefined;
+    }
 
-  // Create model deploy prefill info for catalog model
-  const modelDeployPrefill = React.useMemo(() => {
-    // For catalog models, we need to create a ModelDeployPrefillInfo
-    return {
-      data: {
-        modelName: model.name,
-        modelArtifactUri: uri,
-        connectionTypeName: uri?.includes('oci://') ? 'oci' : 's3',
-      },
-      loaded: true,
-      error: undefined,
-    };
-  }, [model.name, uri]);
+    try {
+      const extractFn = formDataExtensions[0].properties.extractFormData;
+      const formData = extractFn(uri, model.name);
+      if (!formData) return undefined;
 
+      return formData;
+    } catch (e) {
+      console.error('Failed to extract form data:', e);
+      return undefined;
+    }
+  }, [
+    uri,
+    formDataExtensions,
+    formDataExtensionsLoaded,
+    artifactLoaded,
+    artifactsLoadError,
+    model.name,
+  ]);
 
-  const handleSubmit = React.useCallback(() => {
-    setOpenModal(false);
-    navigate('/modelServing');
-  }, [navigate]);
+  const onDeployClick = React.useCallback(() => {
+    if (navigateToWizard && wizardInitialData) {
+      navigateToWizard(wizardInitialData);
+    }
+  }, [navigateToWizard, wizardInitialData]);
 
   return (
     <>
-      {extensions.map((extension) => {
-        return extension.properties.useAvailablePlatformIds && (
+      {/* Get platform IDs */}
+      {platformExtensions.map((extension) => {
+        return (
+          extension.properties.useAvailablePlatformIds && (
+            <HookNotify
+              key={extension.uid}
+              useHook={extension.properties.useAvailablePlatformIds}
+              onNotify={(value) => setAvailablePlatformIds(value ?? [])}
+            />
+          )
+        );
+      })}
+      {/* Get navigation function */}
+      {navigateExtensionsLoaded &&
+        navigateExtensions.length > 0 &&
+        navigateExtensions.map((extension) => (
           <HookNotify
             key={extension.uid}
-            useHook={extension.properties.useAvailablePlatformIds}
-            onNotify={(value) => setAvailablePlatformIds(value ?? [])}
+            useHook={extension.properties.useNavigateToWizard}
+            onNotify={(fn) => {
+              if (fn && typeof fn === 'function') {
+                setNavigateToWizard(() => fn);
+              }
+            }}
           />
-        )
-      })}
-      {render(buttonState, onOpenModal, loaded)}
-      {openModal && extensions.map((extension) => {
-        return extension.properties.modalComponent && (
-          <extension.properties.modalComponent
-            key={extension.uid}
-            modelDeployPrefill={modelDeployPrefill}
-            onSubmit={handleSubmit}
-            onClose={() => setOpenModal(false)}
-          />
-        )
-      })}
+        ))}
+      {render(buttonState, onDeployClick, navigateExtensionsLoaded && !!navigateToWizard)}
     </>
   );
 };

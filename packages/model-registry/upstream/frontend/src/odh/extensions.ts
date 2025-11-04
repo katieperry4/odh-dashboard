@@ -4,11 +4,12 @@ import type {
   RouteExtension,
   AreaExtension,
 } from '@odh-dashboard/plugin-core/extension-points';
+import type { ExternalFormDataExtension } from './extension-points/model-catalog-form-data';
 
 const reliantAreas = ['model-registry'];
 const PLUGIN_MODEL_REGISTRY = 'model-registry-plugin';
 
-const extensions: (NavExtension | RouteExtension | AreaExtension)[] = [
+const extensions: (NavExtension | RouteExtension | AreaExtension | ExternalFormDataExtension)[] = [
   {
     type: 'app.area',
     properties: {
@@ -101,6 +102,13 @@ const extensions: (NavExtension | RouteExtension | AreaExtension)[] = [
     properties: {
       path: '/model-registry-settings/*',
       component: () => import('./ModelRegistrySettingsRoutesWrapper'),
+    },
+  },
+  {
+    type: 'model-serving.external/extract-form-data',
+    properties: {
+      extractFormData: () =>
+        import('./extractExternalFormData').then((m) => m.extractExternalFormData),
     },
   },
 ];
