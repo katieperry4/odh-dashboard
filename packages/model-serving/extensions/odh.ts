@@ -108,9 +108,9 @@ const extensions: (
   {
     type: 'model-serving.deployment/navigate-wizard',
     properties: {
-      useNavigateToWizard: () =>
-        import('../src/components/deploymentWizard/useNavigateToWizardFromExtension').then(
-          (m) => m.useNavigateToWizardFromExtension,
+      useNavigateToDeploymentWizard: () =>
+        import('../src/components/deploymentWizard/useNavigateToDeploymentWizard').then(
+          (m) => m.useNavigateToDeploymentWizard,
         ),
     },
     flags: {

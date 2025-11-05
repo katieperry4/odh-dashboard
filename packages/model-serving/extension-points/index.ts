@@ -301,8 +301,12 @@ export const isDeploymentWizardFieldExtension = <D extends Deployment = Deployme
 export type ModelServingNavigateToWizardExtension = Extension<
   'model-serving.deployment/navigate-wizard',
   {
-    useNavigateToWizard: CodeRef<
-      () => (initialData?: InitialWizardFormData, projectName?: string) => void
+    useNavigateToDeploymentWizard: CodeRef<
+      (
+        deployment?: Deployment | null,
+        initialData?: InitialWizardFormData | null,
+        returnRouteValue?: string,
+      ) => (projectName?: string) => void
     >;
   }
 >;
@@ -311,15 +315,3 @@ export const isModelServingNavigateToWizardExtension = (
   extension: Extension,
 ): extension is ModelServingNavigateToWizardExtension =>
   extension.type === 'model-serving.deployment/navigate-wizard';
-
-export type ExternalFormDataExtension = Extension<
-  'model-serving.external/extract-form-data',
-  {
-    extractFormData: CodeRef<(modelUri: string, modelName: string) => InitialWizardFormData | null>;
-  }
->;
-
-export const isExternalFormDataExtension = (
-  extension: Extension,
-): extension is ExternalFormDataExtension =>
-  extension.type === 'model-serving.external/extract-form-data';

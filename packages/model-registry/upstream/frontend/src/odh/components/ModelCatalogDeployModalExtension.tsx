@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { HookNotify, useResolvedExtensions } from '@odh-dashboard/plugin-core';
 import { isModelCatalogDeployModalExtension } from '~/odh/extension-points';
 import { CatalogModel, CatalogModelDetailsParams } from '~/app/modelCatalogTypes';
@@ -9,15 +9,10 @@ import {
   decodeParams,
   getModelArtifactUri,
 } from '~/app/pages/modelCatalog/utils/modelCatalogUtils';
-import {
-  InitialWizardFormData,
-  ModelLocationType,
-} from '@odh-dashboard/model-serving/types/form-data';
-import { extractExternalFormData } from '~/odh/extractExternalFormData';
-import {
-  isExternalFormDataExtension,
-  isNavigateToWizardExtension,
-} from '../extension-points/model-catalog-form-data';
+import { InitialWizardFormData } from '@odh-dashboard/model-serving/types/form-data';
+import { Deployment } from '@odh-dashboard/model-serving/extension-points';
+import { isNavigateToWizardExtension } from '../extension-points/model-catalog-deploy';
+import { extractExternalFormData } from '../extractExternalFormData';
 
 type ModelCatalogDeployModalExtensionProps = {
   model: CatalogModel;
@@ -35,83 +30,35 @@ const ModelCatalogDeployModalExtension: React.FC<ModelCatalogDeployModalExtensio
   const [navigateExtensions, navigateExtensionsLoaded] = useResolvedExtensions(
     isNavigateToWizardExtension,
   );
-  const [formDataExtensions, formDataExtensionsLoaded] = useResolvedExtensions(
-    isExternalFormDataExtension,
-  );
   const [navigateToWizard, setNavigateToWizard] = React.useState<
-    ((initialData?: InitialWizardFormData, projectName?: string) => void) | null
+    | ((
+        deployment?: Deployment | null,
+        initialData?: InitialWizardFormData | null,
+        returnRouteValue?: string,
+      ) => (projectName?: string) => void)
+    | null
   >(null);
-  const [platformExtensions, platformExtensionsLoaded] = useResolvedExtensions(
-    isModelCatalogDeployModalExtension,
-  );
+  const [platformExtensions] = useResolvedExtensions(isModelCatalogDeployModalExtension);
   const [availablePlatformIds, setAvailablePlatformIds] = React.useState<string[]>([]);
   const buttonState = getDeployButtonState(availablePlatformIds, true);
-  // const isModalAvailable = React.useMemo(
-  //   () => extensionsLoaded && extensions.length > 0 && !!navigateToWizard,
-  //   [extensionsLoaded, extensions.length, navigateToWizard],
-  // );
-  const isModalAvailable = React.useMemo(
-    () =>
-      navigateExtensionsLoaded &&
-      navigateExtensions.length > 0 &&
-      !!navigateToWizard &&
-      formDataExtensionsLoaded &&
-      formDataExtensions.length > 0 &&
-      artifactLoaded &&
-      !artifactsLoadError,
-    [
-      navigateExtensionsLoaded,
-      navigateExtensions.length,
-      navigateToWizard,
-      formDataExtensionsLoaded,
-      formDataExtensions.length,
-    ],
-  );
 
   const params = useParams<CatalogModelDetailsParams>();
   const decodedParams = decodeParams(params);
-  const [artifacts, artifactLoaded, artifactsLoadError] = useCatalogModelArtifacts(
+  const [artifacts] = useCatalogModelArtifacts(
     decodedParams.sourceId || '',
     encodeURIComponent(`${decodedParams.modelName}`),
   );
   const uri = artifacts.items.length > 0 ? getModelArtifactUri(artifacts.items) : '';
 
-  // Extract form data using extension
-  const wizardInitialData = React.useMemo((): InitialWizardFormData | undefined => {
-    if (
-      !formDataExtensionsLoaded ||
-      formDataExtensions.length === 0 ||
-      !uri ||
-      !artifactLoaded ||
-      artifactsLoadError
-    ) {
-      return undefined;
+  const wizardInitialData = React.useMemo(
+    () => extractExternalFormData(uri, model.name),
+    [uri, model.name],
+  );
+  const onOpenModal = React.useCallback(() => {
+    if (navigateToWizard) {
+      navigateToWizard();
     }
-
-    try {
-      const extractFn = formDataExtensions[0].properties.extractFormData;
-      const formData = extractFn(uri, model.name);
-      if (!formData) return undefined;
-
-      return formData;
-    } catch (e) {
-      console.error('Failed to extract form data:', e);
-      return undefined;
-    }
-  }, [
-    uri,
-    formDataExtensions,
-    formDataExtensionsLoaded,
-    artifactLoaded,
-    artifactsLoadError,
-    model.name,
-  ]);
-
-  const onDeployClick = React.useCallback(() => {
-    if (navigateToWizard && wizardInitialData) {
-      navigateToWizard(wizardInitialData);
-    }
-  }, [navigateToWizard, wizardInitialData]);
+  }, [navigateToWizard]);
 
   return (
     <>
@@ -133,7 +80,8 @@ const ModelCatalogDeployModalExtension: React.FC<ModelCatalogDeployModalExtensio
         navigateExtensions.map((extension) => (
           <HookNotify
             key={extension.uid}
-            useHook={extension.properties.useNavigateToWizard}
+            useHook={extension.properties.useNavigateToDeploymentWizard}
+            args={[undefined, wizardInitialData, '/ai-hub/deployments/']}
             onNotify={(fn) => {
               if (fn && typeof fn === 'function') {
                 setNavigateToWizard(() => fn);
@@ -141,7 +89,7 @@ const ModelCatalogDeployModalExtension: React.FC<ModelCatalogDeployModalExtensio
             }}
           />
         ))}
-      {render(buttonState, onDeployClick, navigateExtensionsLoaded && !!navigateToWizard)}
+      {render(buttonState, onOpenModal, navigateExtensionsLoaded && !!navigateToWizard)}
     </>
   );
 };

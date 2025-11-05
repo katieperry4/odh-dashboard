@@ -56,6 +56,7 @@ export type ModelLocationData = {
 };
 
 export type InitialWizardFormData = {
+  wizardStartIndex?: number;
   project?: ProjectKind | null;
   modelTypeField?: ModelTypeFieldData;
   k8sNameDesc?: K8sNameDescriptionFieldData;

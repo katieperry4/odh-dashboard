@@ -9,6 +9,7 @@ export const extractExternalFormData = (
   if (!modelUri) return null;
 
   return {
+    wizardStartIndex: 2,
     modelLocationData: {
       type: ModelLocationType.NEW,
       fieldValues: {
@@ -24,6 +25,7 @@ export const extractExternalFormData = (
     modelTypeField: ServingRuntimeModelType.GENERATIVE, 
     k8sNameDesc: {
       name: modelName,
+      description: '',
       k8sName: {
         value: modelName,
         state: {
@@ -34,7 +36,6 @@ export const extractExternalFormData = (
           touched: false,
         },
       },
-      description: '',
     },
   };
 };

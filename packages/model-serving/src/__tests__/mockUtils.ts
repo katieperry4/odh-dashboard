@@ -148,6 +148,7 @@ export const mockDeploymentWizardState = (
           connectionsLoaded: true,
           connectionTypes: [],
           connectionTypesLoaded: true,
+          disableInputFields: false,
         },
         createConnectionData: {
           data: {
