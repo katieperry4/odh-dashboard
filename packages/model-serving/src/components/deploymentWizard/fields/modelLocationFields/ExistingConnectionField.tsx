@@ -136,6 +136,14 @@ export const ExistingConnectionField: React.FC<ExistingConnectionFieldProps> = (
                   fieldValues: {},
                   additionalFields,
                 });
+              } else {
+                setModelLocationData?.({
+                  type: ModelLocationType.EXISTING,
+                  connectionTypeObject: undefined,
+                  connection: getResourceNameFromK8sResource(newConnection),
+                  fieldValues: {},
+                  additionalFields: {},
+                });
               }
             }}
             popperProps={{ appendTo: 'inline' }}

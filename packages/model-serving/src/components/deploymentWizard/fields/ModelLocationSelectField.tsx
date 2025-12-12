@@ -17,12 +17,11 @@ import {
   ConnectionTypeConfigMapObj,
 } from '@odh-dashboard/internal/concepts/connectionTypes/types';
 import {
-  getConnectionTypeRef,
   ModelServingCompatibleTypes,
   isModelServingCompatible,
   filterEnabledConnectionTypes,
+  getModelServingCompatibility,
 } from '@odh-dashboard/internal/concepts/connectionTypes/utils';
-import { getResourceNameFromK8sResource } from '@odh-dashboard/internal/concepts/k8s/utils';
 import { useWatchConnectionTypes } from '@odh-dashboard/internal/utilities/useWatchConnectionTypes';
 import usePvcs from '@odh-dashboard/internal/pages/modelServing/usePvcs';
 import { ModelLocationInputFields, useModelLocationData } from './ModelLocationInputFields';
@@ -91,6 +90,7 @@ export const ModelLocationSelectField: React.FC<ModelLocationSelectFieldProps> =
   };
   const [modelServingConnectionTypes, connectionTypesLoaded] = useWatchConnectionTypes(true);
 
+  // Filtered types for the dropdown so only enabled types are shown
   const filteredModelServingConnectionTypes = React.useMemo(() => {
     return filterEnabledConnectionTypes(modelServingConnectionTypes);
   }, [modelServingConnectionTypes]);
@@ -100,9 +100,6 @@ export const ModelLocationSelectField: React.FC<ModelLocationSelectFieldProps> =
     projectName,
     modelLocationData,
   );
-  const filteredConnections = React.useMemo(() => {
-    return connections.filter((c) => c.metadata.labels['opendatahub.io/dashboard'] === 'true');
-  }, [connections]);
 
   const uriConnectionTypes = filteredModelServingConnectionTypes.filter((t) =>
     isModelServingCompatible(t, ModelServingCompatibleTypes.URI),
@@ -133,8 +130,27 @@ export const ModelLocationSelectField: React.FC<ModelLocationSelectFieldProps> =
           : uriOption.label,
       };
     }
+
+    if (
+      modelLocationData?.connection &&
+      !modelLocationData.connectionTypeObject &&
+      modelLocation !== ModelLocationType.EXISTING
+    ) {
+      const connection = connections.find((c) => c.metadata.name === modelLocationData.connection);
+      if (connection) {
+        const compatibleType = getModelServingCompatibility(connection)[0];
+        switch (compatibleType) {
+          case ModelServingCompatibleTypes.S3ObjectStorage:
+            return { key: s3Option.key, label: s3Option.label };
+          case ModelServingCompatibleTypes.OCI:
+            return { key: ociOption.key, label: ociOption.label };
+          case ModelServingCompatibleTypes.URI:
+            return { key: uriOption.key, label: uriOption.label };
+        }
+      }
+    }
     return undefined;
-  }, [modelLocationData?.connectionTypeObject, modelLocation]);
+  }, [modelLocationData?.connectionTypeObject, modelLocation, connections]);
 
   // State for user selections (overrides computed when user changes)
   const [userSelectedKey, setUserSelectedKey] = React.useState<
@@ -168,16 +184,28 @@ export const ModelLocationSelectField: React.FC<ModelLocationSelectFieldProps> =
       setShowCustomTypeSelect(false);
       setTypeOptions([]);
     }
-  }, [modelLocationData?.connectionTypeObject, connectionTypesLoaded, selectedKey]);
+  }, [
+    modelLocationData?.connectionTypeObject,
+    connectionTypesLoaded,
+    selectedKey,
+    selectedConnection,
+    modelLocation,
+  ]);
 
   const selectedConnectionType = React.useMemo(() => {
-    if (modelLocationData?.type === ModelLocationType.NEW) {
+    if (modelLocationData?.connectionTypeObject) {
       return modelLocationData.connectionTypeObject;
     }
     if (selectedConnection) {
-      return modelServingConnectionTypes.find(
-        (t) => getResourceNameFromK8sResource(t) === getConnectionTypeRef(selectedConnection),
-      );
+      const compatibleType = getModelServingCompatibility(selectedConnection)[0];
+      switch (compatibleType) {
+        case ModelServingCompatibleTypes.S3ObjectStorage:
+          return s3ConnectionTypes[0];
+        case ModelServingCompatibleTypes.OCI:
+          return ociConnectionTypes[0];
+        case ModelServingCompatibleTypes.URI:
+          return uriConnectionTypes[0];
+      }
     }
     return undefined;
   }, [modelLocationData, modelServingConnectionTypes, selectedConnection]);
@@ -329,7 +357,7 @@ export const ModelLocationSelectField: React.FC<ModelLocationSelectFieldProps> =
               <StackItem>
                 <ModelLocationInputFields
                   modelLocation={modelLocation}
-                  connections={filteredConnections}
+                  connections={connections}
                   connectionTypes={modelServingConnectionTypes}
                   selectedConnection={selectedConnection}
                   setSelectedConnection={setSelectedConnection}

@@ -297,6 +297,7 @@ describe('ModelLocationSelectField', () => {
           fieldValues: {},
           connection: 'uri-connection',
           additionalFields: { modelUri: 'uri://test' },
+          //connectionTypeObject: mockConnectionTypes[0],
         },
       });
       expect(result.success).toBe(true);
@@ -308,6 +309,7 @@ describe('ModelLocationSelectField', () => {
           fieldValues: {},
           connection: 's3-connection',
           additionalFields: { modelPath: 'path' },
+          //connectionTypeObject: mockConnectionTypes[1],
         },
       });
       expect(result.success).toBe(true);
@@ -319,6 +321,7 @@ describe('ModelLocationSelectField', () => {
           fieldValues: {},
           connection: 'oci-connection',
           additionalFields: { modelUri: 'oci://test' },
+          //connectionTypeObject: mockConnectionTypes[2],
         },
       });
       expect(result.success).toBe(true);

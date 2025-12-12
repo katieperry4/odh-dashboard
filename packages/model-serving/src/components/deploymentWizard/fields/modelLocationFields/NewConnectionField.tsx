@@ -4,11 +4,14 @@ import {
   ConnectionTypeConfigMapObj,
   ConnectionTypeDataField,
   ConnectionTypeValueType,
+  Connection,
 } from '@odh-dashboard/internal/concepts/connectionTypes/types';
 import {
   ModelServingCompatibleTypes,
   isModelServingCompatible,
   isConnectionTypeDataField,
+  getModelServingConnectionTypeName,
+  getModelServingCompatibility,
 } from '@odh-dashboard/internal/concepts/connectionTypes/utils';
 import ConnectionTypeFormFields from '@odh-dashboard/internal/concepts/connectionTypes/fields/ConnectionTypeFormFields';
 import ConnectionOciPathField from '@odh-dashboard/internal/pages/modelServing/screens/projects/InferenceServiceModal/ConnectionOciPathField';
@@ -18,14 +21,19 @@ import { ModelLocationData } from '../../types';
 type Props = {
   setModelLocationData: (data: ModelLocationData | undefined) => void;
   modelLocationData?: ModelLocationData;
-  connectionType: ConnectionTypeConfigMapObj;
+  connectionType?: ConnectionTypeConfigMapObj;
+  connections?: Connection[];
+  connectionTypeOptions?: ConnectionTypeConfigMapObj[];
 };
 
 const NewConnectionField: React.FC<Props> = ({
   setModelLocationData,
   modelLocationData,
   connectionType,
+  connections,
+  connectionTypeOptions,
 }) => {
+  const connection = connections?.find((c) => c.metadata.name === modelLocationData?.connection);
   const connectionValues = React.useMemo(() => {
     if (!modelLocationData) return {};
     return modelLocationData.fieldValues;
@@ -42,7 +50,13 @@ const NewConnectionField: React.FC<Props> = ({
     });
   };
   const renderAdditionalFields = () => {
-    if (isModelServingCompatible(connectionType, ModelServingCompatibleTypes.S3ObjectStorage)) {
+    if (!connectionType && !connection) {
+      return null;
+    }
+    if (
+      connection &&
+      isModelServingCompatible(connection, ModelServingCompatibleTypes.S3ObjectStorage)
+    ) {
       return (
         <ConnectionS3FolderPathField
           folderPath={modelLocationData?.additionalFields.modelPath || ''}
@@ -60,7 +74,7 @@ const NewConnectionField: React.FC<Props> = ({
       );
     }
 
-    if (isModelServingCompatible(connectionType, ModelServingCompatibleTypes.OCI)) {
+    if (connection && isModelServingCompatible(connection, ModelServingCompatibleTypes.OCI)) {
       return (
         <ConnectionOciPathField
           ociHost={String(modelLocationData?.fieldValues.OCI_HOST || '')}
@@ -83,6 +97,34 @@ const NewConnectionField: React.FC<Props> = ({
     return null;
   };
   const fields = React.useMemo(() => {
+    if (!connectionType) {
+      if (connection?.data) {
+        const compatibleType = getModelServingCompatibility(connection)[0];
+        switch (compatibleType) {
+          case ModelServingCompatibleTypes.OCI:
+            return connectionTypeOptions?.find(
+              (c) =>
+                c.metadata.name ===
+                getModelServingConnectionTypeName(ModelServingCompatibleTypes.OCI),
+            )?.data?.fields;
+          case ModelServingCompatibleTypes.S3ObjectStorage:
+            return connectionTypeOptions?.find(
+              (c) =>
+                c.metadata.name ===
+                getModelServingConnectionTypeName(ModelServingCompatibleTypes.S3ObjectStorage),
+            )?.data?.fields;
+          case ModelServingCompatibleTypes.URI:
+            return connectionTypeOptions?.find(
+              (c) =>
+                c.metadata.name ===
+                getModelServingConnectionTypeName(ModelServingCompatibleTypes.URI),
+            )?.data?.fields;
+          default:
+            return [];
+        }
+      }
+      return [];
+    }
     if (isModelServingCompatible(connectionType, ModelServingCompatibleTypes.S3ObjectStorage)) {
       return connectionType.data?.fields?.map((field) => {
         // Force bucket field to be required
@@ -96,7 +138,7 @@ const NewConnectionField: React.FC<Props> = ({
       });
     }
     return connectionType.data?.fields;
-  }, [connectionType]);
+  }, [connectionType, connections, modelLocationData?.connection]);
 
   return (
     <FormGroup>
