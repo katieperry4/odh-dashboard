@@ -102,7 +102,7 @@ class CreateTierPage {
 
   // Level field
   findLevelInput(): Cypress.Chainable<JQuery<HTMLElement>> {
-    return cy.findByTestId('tier-level');
+    return cy.findByTestId('tier-level').find('input[type="number"]');
   }
 
   // Groups MultiSelection

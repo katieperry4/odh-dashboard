@@ -54,12 +54,16 @@ const CreateTierForm: React.FC<CreateTierFormProps> = ({ tier }) => {
   );
   const [groupsTouched, setGroupsTouched] = React.useState(false);
 
-  const [tokenLimitEnabled, setTokenLimitEnabled] = React.useState(false);
+  const [tokenLimitEnabled, setTokenLimitEnabled] = React.useState(
+    (tier?.limits.tokensPerUnit.length ?? 0) >= 1,
+  );
   const [tokenLimits, setTokenLimits] = React.useState<RateLimit[]>(
     tier?.limits.tokensPerUnit ?? [DEFAULT_TOKEN_LIMIT],
   );
 
-  const [requestLimitEnabled, setRequestLimitEnabled] = React.useState(false);
+  const [requestLimitEnabled, setRequestLimitEnabled] = React.useState(
+    (tier?.limits.requestsPerUnit.length ?? 0) >= 1,
+  );
   const [requestLimits, setRequestLimits] = React.useState<RateLimit[]>(
     tier?.limits.requestsPerUnit ?? [DEFAULT_REQUEST_LIMIT],
   );

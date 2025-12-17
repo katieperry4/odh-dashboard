@@ -1,6 +1,7 @@
 import { mockDashboardConfig } from '@odh-dashboard/internal/__mocks__';
 import { asProductAdminUser } from '../../../utils/mockUsers';
 import { createTierPage, tiersPage } from '../../../pages/modelsAsAService';
+import { mockTiers } from '../../../../../maas/frontend/src/app/types/tier';
 
 describe('Tiers Page', () => {
   beforeEach(() => {
@@ -11,6 +12,7 @@ describe('Tiers Page', () => {
         modelAsService: true,
       }),
     );
+    cy.intercept('GET', '/api/tiers', mockTiers);
 
     tiersPage.visit();
   });
@@ -82,6 +84,42 @@ describe('Tiers Page', () => {
     createTierPage.findRequestRateLimitCountInput(0).type('200');
     createTierPage.findRequestRateLimitTimeInput(0).type('3');
     createTierPage.selectRequestRateLimitUnit(0, 'second');
+    createTierPage.findCreateButton().should('exist').should('be.enabled').click();
+
+    tiersPage.findTable().should('exist');
+  });
+
+  it('should edit a tier', () => {
+    cy.intercept('GET', '/api/tiers/enterprise-tier', mockTiers[2]);
+
+    tiersPage.getRow('Enterprise Tier').findKebabAction('Edit tier').click();
+    createTierPage.findTitle().should('contain.text', 'Edit tier');
+    createTierPage
+      .findPageDescription()
+      .should(
+        'contain.text',
+        'Edit a tier to control which models users can access based on their group membership.',
+      );
+
+    createTierPage.findNameInput().should('have.value', 'Enterprise Tier');
+    createTierPage
+      .findDescriptionInput()
+      .should(
+        'have.value',
+        'Unlimited access for enterprise users with all models and no expiration',
+      );
+    createTierPage.findLevelInput().should('have.value', '20');
+    createTierPage
+      .findGroupsSelectButton()
+      .should('have.value', 'enterprise-users,enterprise-admins');
+    createTierPage.findTokenRateLimitCheckbox().should('be.checked');
+    createTierPage.findTokenRateLimitCountInput(0).should('have.value', '1,000,000');
+    createTierPage.findTokenRateLimitTimeInput(0).should('have.value', '1,000');
+    createTierPage.findTokenRateLimitUnitSelect(0).should('have.value', 'hour');
+    createTierPage.findRequestRateLimitCheckbox().should('be.checked');
+    createTierPage.findRequestRateLimitCountInput(0).should('have.value', '10,000');
+    createTierPage.findRequestRateLimitTimeInput(0).should('have.value', '1,000');
+    createTierPage.findRequestRateLimitUnitSelect(0).should('have.value', 'second');
     createTierPage.findCreateButton().should('exist').should('be.enabled').click();
 
     tiersPage.findTable().should('exist');
