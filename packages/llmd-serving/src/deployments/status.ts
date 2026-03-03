@@ -11,7 +11,12 @@ import { groupVersionKind } from '@odh-dashboard/internal/api/k8sUtils';
 import useK8sWatchResourceList from '@odh-dashboard/internal/utilities/useK8sWatchResourceList';
 import { CustomWatchK8sResult } from '@odh-dashboard/internal/types';
 import { getModelDeploymentStoppedStates } from '@odh-dashboard/model-serving/utils';
-import { LLMdDeployment, LLMInferenceServiceKind, LLMInferenceServiceModel } from '../types';
+import {
+  LLMdDeployment,
+  LLMInferenceServiceKind,
+  LLMInferenceServiceModel,
+  LLMInferenceServiceReadyConditionReason,
+} from '../types';
 
 export const useLLMInferenceServicePods = (
   namespace: string,
@@ -81,10 +86,12 @@ export const getLLMInferenceServiceModelState = (
   }
   switch (readyCondition?.status) {
     case 'False':
-      if (readyCondition.reason === 'ProgressDeadlineExceeded') {
+      if (
+        readyCondition.reason === LLMInferenceServiceReadyConditionReason.PROGRESS_DEADLINE_EXCEEDED
+      ) {
         return ModelDeploymentState.FAILED_TO_LOAD;
       }
-      if (readyCondition.message === 'Service is stopped') {
+      if (readyCondition.reason === LLMInferenceServiceReadyConditionReason.STOPPED) {
         // if the service is actually stopped it overrides this, checking for stopped here prevents a false failure while the status is updating after hitting start
         return ModelDeploymentState.PENDING;
       }
