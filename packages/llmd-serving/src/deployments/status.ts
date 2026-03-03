@@ -91,7 +91,10 @@ export const getLLMInferenceServiceModelState = (
   }
   switch (readyCondition?.status) {
     case 'False':
-      return ModelDeploymentState.FAILED_TO_LOAD;
+      if (readyCondition.reason === 'ProgressDeadlineExceeded') {
+        return ModelDeploymentState.FAILED_TO_LOAD;
+      }
+      return ModelDeploymentState.PENDING;
     case 'True':
       return ModelDeploymentState.LOADED;
     default:
