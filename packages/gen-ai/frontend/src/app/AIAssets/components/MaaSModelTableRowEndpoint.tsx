@@ -12,6 +12,7 @@ import {
   Spinner,
 } from '@patternfly/react-core';
 import { InfoCircleIcon } from '@patternfly/react-icons';
+import { genRandomChars } from 'mod-arch-shared';
 import { MaaSModel } from '~/app/types';
 import useGenerateMaaSToken from '~/app/hooks/useGenerateMaaSToken';
 import { copyToClipboardWithTracking } from '~/app/utilities/utils';
@@ -21,7 +22,9 @@ type MaaSModelTableRowEndpointProps = {
 };
 
 const MaaSModelTableRowEndpoint: React.FC<MaaSModelTableRowEndpointProps> = ({ model }) => {
-  const { isGenerating, tokenData, error, generateToken, resetToken } = useGenerateMaaSToken();
+  const { isGenerating, tokenData, error, generateToken, resetToken } = useGenerateMaaSToken(
+    `maas-token-${genRandomChars()}`,
+  );
 
   if (!model.url) {
     return <span>-</span>;
