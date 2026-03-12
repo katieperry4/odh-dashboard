@@ -3,6 +3,7 @@ import { DataScienceStackComponent } from '@odh-dashboard/internal/concepts/area
 import { asProductAdminUser } from '../../../utils/mockUsers';
 import {
   apiKeysPage,
+  bulkRevokeAPIKeyModal,
   revokeAPIKeyModal,
   copyApiKeyModal,
   createApiKeyModal,
@@ -30,8 +31,13 @@ describe('API Keys Page', () => {
       }),
     );
 
-    cy.interceptOdh('GET /maas/api/v1/api-keys', {
-      data: mockAPIKeys(),
+    cy.interceptOdh('POST /maas/api/v1/api-keys/search', {
+      data: {
+        object: 'list',
+        data: mockAPIKeys(),
+        // eslint-disable-next-line camelcase
+        has_more: false,
+      },
     });
 
     apiKeysPage.visit();
@@ -57,22 +63,24 @@ describe('API Keys Page', () => {
     ciPipelineRow.findExpirationDate().should('contain.text', 'Jan 18, 2026');
   });
 
-  it('should revoke api keys', () => {
+  it('should bulk revoke all API keys', () => {
     apiKeysPage.findTitle().should('contain.text', 'API Keys');
     apiKeysPage.findActionsToggle().click();
     apiKeysPage.findRevokeAllAPIKeysAction().click();
 
-    revokeAPIKeyModal.shouldBeOpen();
-    revokeAPIKeyModal.findRevokeButton().should('be.disabled');
-    revokeAPIKeyModal.findRevokeConfirmationInput().type('incorrect');
-    revokeAPIKeyModal.findRevokeButton().should('be.disabled');
-    revokeAPIKeyModal.findRevokeConfirmationInput().clear().type('revoke');
-    revokeAPIKeyModal.findRevokeButton().should('be.enabled');
+    bulkRevokeAPIKeyModal.shouldBeOpen();
+    bulkRevokeAPIKeyModal.findRevokeButton().should('be.disabled');
+    bulkRevokeAPIKeyModal.findRevokeConfirmationInput().type('incorrect');
+    bulkRevokeAPIKeyModal.findRevokeButton().should('be.disabled');
+    bulkRevokeAPIKeyModal.findRevokeConfirmationInput().clear().type('revoke');
+    bulkRevokeAPIKeyModal.findRevokeButton().should('be.enabled');
 
-    cy.interceptOdh('DELETE /maas/api/v1/api-keys', { data: null }).as('deleteAllApiKeys');
-    cy.interceptOdh('GET /maas/api/v1/api-keys', {
-      data: [],
-    }).as('getApiKeysAfterDelete');
+    cy.interceptOdh('POST /maas/api/v1/api-keys/bulk-revoke', {
+      data: {
+        revokedCount: 4,
+        message: 'All API keys revoked',
+      },
+    }).as('deleteAllApiKeys');
 
     revokeAPIKeyModal.findRevokeButton().click();
     apiKeysPage.findEmptyState().should('exist');
@@ -83,12 +91,44 @@ describe('API Keys Page', () => {
     cy.wait('@getApiKeysAfterDelete');
   });
 
+  it('should revoke a specific API key', () => {
+    apiKeysPage.findTitle().should('contain.text', 'API Keys');
+    apiKeysPage.getRow('ci-pipeline').findKebabAction('Revoke API key').click();
+
+    revokeAPIKeyModal.shouldBeOpen();
+    revokeAPIKeyModal.findRevokeButton().should('be.disabled');
+    revokeAPIKeyModal.findRevokeConfirmationInput().type('incorrect');
+    revokeAPIKeyModal.findRevokeButton().should('be.disabled');
+    revokeAPIKeyModal.findRevokeConfirmationInput().clear().type('ci-pipeline');
+    revokeAPIKeyModal.findRevokeButton().should('be.enabled');
+
+    cy.interceptOdh(
+      'DELETE /maas/api/v1/api-keys/:id',
+      { path: { id: 'key-ci-pipeline-003' } },
+      {
+        data: {
+          id: 'key-ci-pipeline-003',
+          name: 'ci-pipeline',
+          description: 'API key for CI/CD pipeline automation',
+          status: 'revoked',
+          creationDate: '2026-01-11T11:54:34.521671447-05:00',
+        },
+      },
+    ).as('deleteApiKey');
+
+    revokeAPIKeyModal.findRevokeButton().click();
+
+    cy.wait('@deleteApiKey').then((interception) => {
+      expect(interception.response?.statusCode).to.eq(200);
+    });
+  });
+
   it('should create a new API key', () => {
     const now = new Date(2026, 0, 14).getTime(); // January 14, 2026
     // Set the clock to the same day every time so the expiration date is always the same
     cy.clock(now);
 
-    cy.interceptOdh('POST /maas/api/v1/api-key', {
+    cy.interceptOdh('POST /maas/api/v1/api-keys', {
       data: mockCreateAPIKeyResponse(),
     }).as('createApiKey');
 
@@ -101,7 +141,6 @@ describe('API Keys Page', () => {
     cy.wait('@createApiKey').then((interception) => {
       expect(interception.response?.body?.data).to.include({
         name: 'production-backend',
-        description: 'Production API key for backend service',
         expiresAt: '2026-01-20T11:54:34.521671447-05:00',
       });
     });
