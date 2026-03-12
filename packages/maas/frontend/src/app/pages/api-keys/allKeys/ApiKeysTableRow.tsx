@@ -34,7 +34,9 @@ const ApiKeysTableRow: React.FC<ApiKeysTableRowProps> = ({ apiKey, onDeleteApiKe
       </Label>
     </Td>
     <Td dataLabel={apiKeyColumns[2].label}>{formatDate(apiKey.creationDate)}</Td>
-    <Td dataLabel={apiKeyColumns[3].label}>{formatDate(apiKey.expirationDate)}</Td>
+    <Td dataLabel={apiKeyColumns[3].label}>
+      {apiKey.expirationDate ? formatDate(apiKey.expirationDate) : 'Never'}
+    </Td>
     <Td isActionCell>
       <ActionsColumn
         items={[
