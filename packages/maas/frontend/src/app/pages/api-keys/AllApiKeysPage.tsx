@@ -2,16 +2,19 @@ import ApplicationsPage from '@odh-dashboard/internal/pages/ApplicationsPage';
 import { PageSection } from '@patternfly/react-core';
 import React from 'react';
 import { useFetchApiKeys } from '~/app/hooks/useFetchApiKeys';
-import { APIKeyStatus, APIKeySearchRequest, APIKey } from '~/app/types/api-key';
+import {
+  APIKeyStatus,
+  APIKeySearchRequest,
+  APIKey,
+  ApiKeyFilterDataType,
+  initialApiKeyFilterData,
+} from '~/app/types/api-key';
 import { ApiKeySortField } from './allKeys/columns';
 import CreateApiKeyModal from './CreateApiKeyModal';
 import ApiKeysTable from './allKeys/ApiKeysTable';
 import EmptyApiKeysPage from './EmptyApiKeysPage';
 import RevokeApiKeyModal from './RevokeApiKeyModal';
-import ApiKeysToolbar, {
-  ApiKeyFilterDataType,
-  initialApiKeyFilterData,
-} from './allKeys/ApiKeysToolbar';
+import ApiKeysToolbar from './allKeys/ApiKeysToolbar';
 
 type SortDirection = 'asc' | 'desc';
 
