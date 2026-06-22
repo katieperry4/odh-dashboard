@@ -154,11 +154,15 @@ export const mockSubscriptions = (): MaaSSubscription[] => [
       {
         name: 'granite-3-8b-instruct',
         namespace: 'maas-models',
+        displayName: 'Granite 3 8B Instruct',
+        description: 'IBM Granite 3 8B instruction-tuned language model.',
         tokenRateLimits: [{ limit: 100000, window: '24h' }],
       },
       {
         name: 'flan-t5-small',
         namespace: 'maas-models',
+        displayName: 'Flan T5 Small',
+        description: 'Google Flan T5 small text-to-text transfer transformer model.',
         tokenRateLimits: [{ limit: 200000, window: '24h' }],
       },
     ],
@@ -182,6 +186,8 @@ export const mockSubscriptions = (): MaaSSubscription[] => [
       {
         name: 'flan-t5-small',
         namespace: 'maas-models',
+        displayName: 'Flan T5 Small',
+        description: 'Google Flan T5 small text-to-text transfer transformer model.',
         tokenRateLimits: [{ limit: 10000, window: '24h' }],
       },
     ],
@@ -201,6 +207,8 @@ export const mockSubscriptions = (): MaaSSubscription[] => [
       {
         name: 'flan-t5-small',
         namespace: 'maas-models',
+        displayName: 'Flan T5 Small',
+        description: 'Google Flan T5 small text-to-text transfer transformer model.',
         tokenRateLimits: [{ limit: 10000, window: '24h' }],
       },
     ],
@@ -414,7 +422,14 @@ export const mockFailedAuthPolicy = (): MaaSAuthPolicy => ({
   namespace: 'maas-system',
   phase: 'Failed',
   statusMessage: 'all 2 model references are invalid or missing',
-  modelRefs: [{ name: 'granite-3-8b-instruct', namespace: 'maas-models' }],
+  modelRefs: [
+    {
+      name: 'granite-3-8b-instruct',
+      namespace: 'maas-models',
+      displayName: 'Granite 3 8B Instruct',
+      description: 'IBM Granite 3 8B instruction-tuned language model.',
+    },
+  ],
   subjects: { groups: [{ name: 'system:authenticated' }] },
 });
 
@@ -423,7 +438,14 @@ export const mockPendingAuthPolicy = (): MaaSAuthPolicy => ({
   namespace: 'maas-system',
   phase: 'Pending',
   statusMessage: '',
-  modelRefs: [{ name: 'flan-t5-small', namespace: 'maas-models' }],
+  modelRefs: [
+    {
+      name: 'flan-t5-small',
+      namespace: 'maas-models',
+      displayName: 'Flan T5 Small',
+      description: 'Google Flan T5 small text-to-text transfer transformer model.',
+    },
+  ],
   subjects: { groups: [{ name: 'beta-testers' }] },
 });
 
@@ -432,7 +454,14 @@ export const mockDeletingAuthPolicy = (): MaaSAuthPolicy => ({
   namespace: 'maas-system',
   phase: 'Active',
   statusMessage: 'successfully reconciled',
-  modelRefs: [{ name: 'granite-3-8b-instruct', namespace: 'maas-models' }],
+  modelRefs: [
+    {
+      name: 'granite-3-8b-instruct',
+      namespace: 'maas-models',
+      displayName: 'Granite 3 8B Instruct',
+      description: 'IBM Granite 3 8B instruction-tuned language model.',
+    },
+  ],
   subjects: { groups: [{ name: 'premium-users' }] },
   deletionTimestamp: '2025-04-07T12:00:00Z',
 });
@@ -443,7 +472,14 @@ export const mockAuthPolicies = (): MaaSAuthPolicy[] => [
     namespace: 'maas-system',
     phase: 'Active',
     statusMessage: 'successfully reconciled',
-    modelRefs: [{ name: 'granite-3-8b-instruct', namespace: 'maas-models' }],
+    modelRefs: [
+      {
+        name: 'granite-3-8b-instruct',
+        namespace: 'maas-models',
+        displayName: 'Granite 3 8B Instruct',
+        description: 'IBM Granite 3 8B instruction-tuned language model.',
+      },
+    ],
     subjects: { groups: [{ name: 'premium-users' }, { name: 'my-custom-group' }] },
   },
   {
