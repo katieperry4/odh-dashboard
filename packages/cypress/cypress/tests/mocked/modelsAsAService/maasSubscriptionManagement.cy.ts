@@ -6,7 +6,11 @@ import {
   subscriptionsPage,
   authPoliciesPage,
 } from '../../../pages/modelsAsAService';
-import { mockSubscriptions, mockAuthPolicies } from '../../../utils/maasUtils';
+import {
+  mockSubscriptions,
+  mockAuthPolicies,
+  mockSubscriptionFormData,
+} from '../../../utils/maasUtils';
 
 const setupCommonIntercepts = () => {
   asProductAdminUser();
@@ -27,6 +31,9 @@ const setupCommonIntercepts = () => {
       conditions: [{ type: 'ModelsAsServiceReady', status: 'True', reason: 'Ready' }],
     }),
   );
+  cy.interceptOdh('GET /maas/api/v1/subscription-policy-form-data', {
+    data: mockSubscriptionFormData(),
+  });
   cy.interceptOdh('GET /maas/api/v1/all-subscriptions', { data: mockSubscriptions() });
   cy.interceptOdh('GET /maas/api/v1/all-policies', { data: mockAuthPolicies() });
 };
@@ -34,6 +41,34 @@ const setupCommonIntercepts = () => {
 describe('Subscription Management Page', () => {
   beforeEach(() => {
     setupCommonIntercepts();
+  });
+  it('should show the overview empty state when there are no subscriptions, policies, or model refs', () => {
+    cy.interceptOdh('GET /maas/api/v1/subscription-policy-form-data', {
+      data: mockSubscriptionFormData({
+        groups: [],
+        modelRefs: [],
+        subscriptions: [],
+        policies: [],
+      }),
+    });
+    subscriptionManagementPage.visit();
+    subscriptionManagementPage.findOverviewEmptyState().should('exist');
+    subscriptionManagementPage.findCreateSubscriptionButton().should('exist');
+    subscriptionManagementPage.findCreateAuthPolicyButton().should('exist');
+  });
+
+  it('should show the subscriptions empty state when there are no subscriptions', () => {
+    cy.interceptOdh('GET /maas/api/v1/all-subscriptions', { data: [] });
+    subscriptionManagementPage.visit('subscriptions');
+    subscriptionManagementPage.findSubscriptionsEmptyState().should('exist');
+    subscriptionManagementPage.findCreateSubscriptionButton().should('exist');
+  });
+
+  it('should show the auth policies empty state when there are no policies', () => {
+    cy.interceptOdh('GET /maas/api/v1/all-policies', { data: [] });
+    subscriptionManagementPage.visit('auth-policies');
+    subscriptionManagementPage.findAuthPoliciesEmptyState().should('exist');
+    subscriptionManagementPage.findCreateAuthPolicyButton().should('exist');
   });
 
   it('should display the page with tabs and default to the overview tab', () => {
