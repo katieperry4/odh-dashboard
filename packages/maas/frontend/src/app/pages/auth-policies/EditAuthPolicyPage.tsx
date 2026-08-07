@@ -5,6 +5,7 @@ import { ApplicationsPage } from '@odh-dashboard/ui-core';
 import { useGetPolicyInfo } from '~/app/hooks/useGetPolicyInfo';
 import { useSubscriptionPolicyFormData } from '~/app/hooks/useSubscriptionPolicyFormData';
 import { getBackUrl } from '~/app/utilities/subscriptionManagementNavigation';
+import { EventTrackingEditSource } from '~/app/types/event-tracking';
 import PolicyForm from './policyForm/PolicyForm';
 
 const EditAuthPolicyPage: React.FC = () => {
@@ -14,6 +15,14 @@ const EditAuthPolicyPage: React.FC = () => {
   const returnTo = base;
   const [policyInfo, policyLoaded, policyError] = useGetPolicyInfo(authPolicyName);
   const [formData, formLoaded, formError] = useSubscriptionPolicyFormData();
+  const editSource =
+    state != null &&
+    typeof state === 'object' &&
+    'editSource' in state &&
+    (state.editSource === EventTrackingEditSource.LIST_KEBAB ||
+      state.editSource === EventTrackingEditSource.DETAIL_KEBAB)
+      ? state.editSource
+      : undefined;
 
   const loaded = policyLoaded && formLoaded;
   const loadError = policyError ?? formError;
@@ -40,6 +49,7 @@ const EditAuthPolicyPage: React.FC = () => {
           formData={formData}
           initialPolicy={policyInfo.policy}
           returnTo={returnTo}
+          editSource={editSource}
         />
       )}
     </ApplicationsPage>

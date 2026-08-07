@@ -28,6 +28,7 @@ import SubscriptionManagementYamlTab from '~/app/pages/subscription-management/S
 import {
   EventTrackingResourceType,
   EventTrackingSource,
+  EventTrackingEditSource,
   MaaSEvents,
 } from '~/app/types/event-tracking';
 import DeleteSubscriptionModal from './DeleteSubscriptionModal';
@@ -43,7 +44,12 @@ const SubscriptionActions: React.FC<SubscriptionActionsProps> = ({ subscription,
   const navigate = useNavigate();
   const [isDeleteOpen, setIsDeleteOpen] = React.useState(false);
   const backUrl = returnTo ?? getSectionUrl('subscriptions');
-  const navState = returnTo ? { state: { returnTo } } : undefined;
+  const navState = {
+    state: {
+      ...(returnTo ? { returnTo } : {}),
+      editSource: EventTrackingEditSource.DETAIL_KEBAB,
+    },
+  };
 
   return (
     <>

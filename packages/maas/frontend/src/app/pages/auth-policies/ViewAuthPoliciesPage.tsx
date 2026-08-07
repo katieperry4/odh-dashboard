@@ -24,6 +24,7 @@ import MaasModelsSection from '~/app/shared/MaasModelsSection';
 import {
   EventTrackingResourceType,
   EventTrackingSource,
+  EventTrackingEditSource,
   MaaSEvents,
 } from '~/app/types/event-tracking';
 import SubscriptionManagementYamlTab from '~/app/pages/subscription-management/SubscriptionManagementYamlTab';
@@ -58,7 +59,9 @@ const PolicyActions: React.FC<PolicyActionsProps> = ({ policy, returnTo }) => {
   const navigate = useNavigate();
   const [isDeleteOpen, setIsDeleteOpen] = React.useState(false);
   const backUrl = returnTo ?? getSectionUrl('auth-policies');
-  const navState = returnTo ? { state: { returnTo } } : undefined;
+  const navState = returnTo
+    ? { state: { returnTo, editSource: EventTrackingEditSource.DETAIL_KEBAB } }
+    : undefined;
 
   return (
     <>

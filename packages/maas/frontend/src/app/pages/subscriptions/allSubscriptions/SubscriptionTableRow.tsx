@@ -21,6 +21,7 @@ import {
   EventTrackingExpandedSection,
   EventTrackingResourceType,
   EventTrackingSource,
+  EventTrackingEditSource,
   MaaSEvents,
 } from '~/app/types/event-tracking';
 import { subscriptionsColumns } from './columns';
@@ -41,7 +42,12 @@ const SubscriptionTableRow: React.FC<SubscriptionTableRowProps> = ({
   returnTo,
 }) => {
   const navigate = useNavigate();
-  const navState = returnTo ? { state: { returnTo } } : undefined;
+  const navState = {
+    state: {
+      ...(returnTo ? { returnTo } : {}),
+      editSource: EventTrackingEditSource.LIST_KEBAB,
+    },
+  };
   const [expandedPanel, setExpandedPanel] = React.useState<ExpandedPanel>(null);
 
   const togglePanel = (panel: 'groups' | 'models') => {
