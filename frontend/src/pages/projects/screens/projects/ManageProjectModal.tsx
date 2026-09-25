@@ -17,7 +17,6 @@ import K8sNameDescriptionField, {
 } from '@odh-dashboard/ui-core/components/K8sNameDescriptionField';
 import { TrackingOutcome } from '@odh-dashboard/ui-core';
 import { createProject, updateProject } from '#~/api';
-import { useUser } from '#~/redux/selectors';
 import { ProjectsContext } from '#~/concepts/projects/ProjectsContext';
 import { fireFormTrackingEvent } from '#~/concepts/analyticsTracking/segmentIOUtils';
 
@@ -34,7 +33,6 @@ const ManageProjectModal: React.FC<ManageProjectModalProps> = ({ editProjectData
     initialData: editProjectData,
     limitNameResourceType: LimitNameResourceType.PROJECT,
   });
-  const { username } = useUser();
 
   const canSubmit = !fetching && isK8sNameDescriptionDataValid(k8sNameDescriptionData.data);
 
@@ -71,8 +69,13 @@ const ManageProjectModal: React.FC<ManageProjectModalProps> = ({ editProjectData
         .then(() => onBeforeClose())
         .catch(handleError);
     } else {
-      createProject(username, name, description, k8sName)
-        .then((projectName) => waitForProject(projectName).then(() => onBeforeClose(projectName)))
+      createProject(name, description, k8sName)
+        .then((projectName) => {
+          // Keep ProjectsContext in sync, but do not block closing — the project watch can
+          // lag behind create (especially when this modal is opened from a federated remote).
+          void waitForProject(projectName);
+          onBeforeClose(projectName);
+        })
         .catch(handleError);
     }
   };
